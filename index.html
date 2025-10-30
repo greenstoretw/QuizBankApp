@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='0' y='14'>🧠</text></svg>">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>填空題問答測驗 - 極簡學習版</title>
     
+    <!-- FIX: Favicon (使用學習相關的 Emoji) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='0' y='14'>🧠</text></svg>">
+
     <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -163,6 +167,24 @@
             <div id="manager-feedback" class="hidden error-message-card p-3 rounded-lg text-sm text-center font-medium">
                 <!-- Message will be inserted here -->
             </div>
+            
+            <!-- NEW: Google Sign-In Section -->
+            <div id="google-sign-in-section" class="space-y-3 p-4 input-card hidden">
+                <button onclick="signInWithGoogle()"
+                    class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 flex items-center justify-center space-x-2">
+                    <svg class="w-5 h-5" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M44.5 20H42V19H24V29H38.5C37.3 32.7 34 35.5 30 36.5V40.5C35.5 39.4 40.5 35 43.5 29.5L44.5 28.5V24V20Z" fill="#4285F4"/>
+                        <path d="M24 44C33.9 44 42.4 39 46 32L40.5 29.5C38 33.2 33.3 35.5 28 35.5C21 35.5 15.1 30.7 13 24H9C11.5 33.3 19.8 40 29 40V44H24Z" fill="#34A853"/>
+                        <path d="M5 24C5 20 6.5 16.3 9 13L14 15.5C12.5 18.2 11.5 21 11.5 24C11.5 27 12.5 29.8 14 32.5L9 35C6.5 31.7 5 28 5 24Z" fill="#FBBC04"/>
+                        <path d="M9 13L14 15.5L16.5 13C19.5 9 24 6.5 29 6.5C33 6.5 36.5 8 39 10.5L43.5 6C40.5 3 35.5 0.5 29 0.5C19.8 0.5 11.5 7.2 9 16L14 18.5V13Z" fill="#EA4335"/>
+                        <path d="M44 20H24V29H44V20Z" fill="url(#paint0_linear_101_13)"/>
+                        <defs><linearGradient id="paint0_linear_101_13" x1="24" y1="24.5" x2="44" y2="24.5" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient></defs>
+                    </svg>
+                    <span>使用 Google 帳號登入 / 連結</span>
+                </button>
+                <p class="text-xs text-center text-gray-500">登入可確保數據永久綁定您的 Google 帳號。</p>
+            </div>
+
 
             <p id="current-bank-display" class="text-lg text-gray-700">當前題庫: <span class="font-bold text-gray-900">未載入</span></p>
 
@@ -290,7 +312,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, getDoc, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -336,6 +358,7 @@
         const errorBankInfo = document.getElementById('error-bank-info');
         const reviewMistakesButton = document.getElementById('review-mistakes-button');
         const managerFeedback = document.getElementById('manager-feedback'); // NEW
+        const googleSignInSection = document.getElementById('google-sign-in-section'); // NEW
 
         // Utility functions
         let saveTimeout;
@@ -392,13 +415,25 @@
             loadingScreen.classList.remove('hidden');
 
             try {
-                // Get global variables
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                // HARDCODED CONFIG FOR GITHUB DEPLOYMENT
+                // --------------------------------------------------------
+                const GITHUB_FIREBASE_CONFIG = {
+                    apiKey: "AIzaSyC7y4p2TZkA5OfOwTTNPQwM6qhrruXZ-H4",
+                    authDomain: "databank-study.firebaseapp.com",
+                    projectId: "databank-study",
+                    storageBucket: "databank-study.firebasestorage.app",
+                    messagingSenderId: "127048581519",
+                    appId: "1:127048581519:web:f1424f735cded5ef8e4bfa" 
+                };
+                // --------------------------------------------------------
+                
+                // 優先使用 GITHUB_FIREBASE_CONFIG
+                const firebaseConfig = GITHUB_FIREBASE_CONFIG;
+                appId = firebaseConfig.appId || 'default-github-app-id'; 
+                const initialAuthToken = null; // 在 GitHub 上無法使用初始 auth token
 
-                if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
-                    console.error("Firebase config is missing. Data persistence disabled.");
+                if (!firebaseConfig || !firebaseConfig.apiKey) {
+                    console.error("Firebase config is missing or invalid. Data persistence disabled.");
                     isAuthReady = true;
                     currentBankId = 'default_bank';
                     loadingScreen.classList.add('hidden');
@@ -412,38 +447,42 @@
                 auth = getAuth(app);
                 setLogLevel('debug');
 
-                // Authenticate
-                await new Promise(resolve => {
-                    onAuthStateChanged(auth, async (user) => {
-                        if (user) {
-                            userId = user.uid;
-                            resolve();
-                        } else {
-                            try {
-                                if (initialAuthToken) {
-                                    await signInWithCustomToken(auth, initialAuthToken);
-                                } else {
-                                    await signInAnonymously(auth);
-                                }
-                                userId = auth.currentUser.uid;
-                            } catch (e) {
-                                console.error("Authentication failed:", e);
-                                userId = crypto.randomUUID(); 
-                            }
-                            resolve();
-                        }
-                    });
+                // Authenticate Listener
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdDisplay.textContent = user.isAnonymous ? userId.substring(0, 8) + '... (Guest)' : (user.email ? user.email.substring(0, user.email.indexOf('@')) + ' (Google)' : userId.substring(0, 8) + ' (Google)');
+                        googleSignInSection.classList.add('hidden');
+                    } else {
+                        userId = crypto.randomUUID(); 
+                        userIdDisplay.textContent = userId.substring(0, 8) + '... (Local)';
+                        googleSignInSection.classList.remove('hidden');
+                    }
+                    
+                    // Only run initial load once authentication state is established
+                    if (!isAuthReady) {
+                        isAuthReady = true;
+                        currentBankId = 'default_bank';
+                        isErrorBankActive = false;
+                        await window.loadBankNames();
+                        loadingScreen.classList.add('hidden');
+                        window.showBankManager();
+                    }
                 });
 
-                userIdDisplay.textContent = userId.substring(0, 8) + '...';
-                isAuthReady = true;
-                currentBankId = 'default_bank';
-                isErrorBankActive = false; 
-
-                // Load bank metadata and show manager
-                await window.loadBankNames(); // FIXED: Changed loadBankNames() to window.loadBankNames()
-                loadingScreen.classList.add('hidden');
-                window.showBankManager();
+                // Attempt anonymous sign-in only if no user is currently authenticated (to ensure initial persistence)
+                if (!auth.currentUser) {
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (e) {
+                        console.error("Initial Anonymous Sign-In failed:", e);
+                        if (e.code === 'auth/configuration-not-found') {
+                            managerFeedback.innerHTML = `[ 錯誤: 認證失敗 ] 請檢查您的 Firebase 設定。您需要到 Firebase Console 的 **Authentication** 頁面啟用 **Anonymous 匿名登入**。`;
+                            managerFeedback.classList.remove('hidden');
+                        }
+                    }
+                }
+                
 
             } catch (error) {
                 console.error("Firebase setup failed:", error);
@@ -455,6 +494,24 @@
                 window.showBankManager();
             }
         }
+        
+        // NEW: Google Sign-In Function
+        window.signInWithGoogle = async function() {
+            const provider = new GoogleAuthProvider();
+            managerFeedback.classList.add('hidden');
+            try {
+                // The anonymous user is automatically linked to the Google user
+                const result = await signInWithPopup(auth, provider);
+                console.log("Google Sign-In successful:", result.user.uid);
+                // The onAuthStateChanged listener handles the UI update and user change
+                
+            } catch (error) {
+                console.error("Google Sign-In failed:", error);
+                managerFeedback.innerHTML = `[ 錯誤 ] Google 登入失敗: ${error.message}`;
+                managerFeedback.classList.remove('hidden');
+            }
+        }
+
 
         function getBankCollectionRef() {
             if (!db || !userId || !appId) return null;
@@ -713,7 +770,11 @@
                 continueBankButton.disabled = false;
                 const baseName = currentBankName.replace(' (錯題庫)', '').replace(' (錯題)', '').replace('記錄', '紀錄'); // FIX: Clean up display name
                 const name = isErrorBankActive ? `${baseName}` : baseName;
-                continueBankButton.textContent = `繼續編輯/測驗: ${name}`;
+
+                // 修正 currentBankId 在 error bank log 情況下顯示問題 (僅顯示名稱)
+                const currentBankDisplayName = currentBankName.includes('記錄') ? currentBankName : name;
+                
+                continueBankButton.textContent = `繼續編輯/測驗: ${currentBankDisplayName}`;
             } else {
                 continueBankButton.disabled = true;
                 continueBankButton.textContent = '請先建立或載入題庫';
@@ -889,7 +950,10 @@
             
             if (hasActiveBank) {
                 continueBankButton.disabled = false;
-                continueBankButton.textContent = `繼續編輯/測驗: ${name}`;
+                
+                const currentBankDisplayName = currentBankName.includes('記錄') ? currentBankName : name;
+                
+                continueBankButton.textContent = `繼續編輯/測驗: ${currentBankDisplayName}`;
             } else {
                 continueBankButton.disabled = true;
                 continueBankButton.textContent = '請先建立或載入題庫';
