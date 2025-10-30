@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>填空題問答測驗 - 極簡學習版</title>
+    
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 字體：統一使用 Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc; /* 輕盈的背景色 */
+            color: #333333; 
+            transition: background-color 0.5s;
+        }
+        
+        /* 核心卡片容器：無陰影，乾淨邊框 */
+        .container-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* 輕微的、扁平的陰影 */
+        }
+        
+        /* 輸入項目卡片：乾淨分割 */
+        .input-card {
+            background-color: #ffffff;
+            border: 1px solid #dddddd;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .input-card:hover {
+            box-shadow: 0 0 0 2px #cce0ff; /* 邊框亮藍色提示 */
+            transform: translateY(-2px);
+        }
+        
+        /* 輸入框/文字區：清晰邊框 */
+        input[type="text"], textarea {
+            background-color: #f9f9f9;
+            border: 1px solid #cccccc;
+            color: #333333; 
+            caret-color: #007bff;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus, textarea:focus {
+            border-color: #007bff; /* 主題藍 */
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+            background-color: #ffffff;
+        }
+
+        /* 主題色定義 */
+        .color-primary { color: #007bff; } /* 主題藍 */
+        .color-success { color: #28a745; } /* 綠色成功 */
+        .color-danger { color: #dc3545; }  /* 紅色危險/錯誤 */
+
+        /* 按鈕基礎樣式：扁平化 */
+        button {
+            text-transform: uppercase;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: all 0.2s ease-in-out;
+            border: none;
+        }
+        
+        /* 主要按鈕 (NEW DATA ENTRY) */
+        .button-primary { 
+            background-color: #007bff; /* 主題藍 */
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+        }
+        .button-primary:hover {
+            background-color: #0056b3;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+        }
+        
+        /* 次要按鈕 (LOAD / START SIMULATION / SUBMIT DATA) */
+        .button-secondary { 
+            background-color: #6c757d; /* 灰色 */
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);
+        }
+        .button-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        /* 錯誤按鈕/刪除 (DELETE / REVIEW MISTAKES) */
+        .button-error-review {
+            background-color: #dc3545; /* 紅色 */
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+        }
+        .button-error-review:hover {
+            background-color: #c82333;
+        }
+
+        /* 禁用狀態 */
+        button:disabled {
+            background-color: #e9ecef !important;
+            color: #adb5bd !important;
+            box-shadow: none !important;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* 測驗問題區塊：使用左側色塊提升可讀性 */
+        .quiz-question-box {
+            background-color: #ffffff;
+            border: 1px solid #dddddd;
+            border-left: 4px solid #007bff; /* 主題色指示 */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 錯誤/提醒訊息卡片 */
+        .error-message-card {
+            background-color: #fff0f0;
+            border: 1px solid #dc3545;
+            color: #dc3545;
+        }
+
+        /* 成功/失敗回饋背景 */
+        #feedback-area.bg-green-500 {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        #feedback-area.bg-red-500 {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* 題庫列表控制項 */
+        .list-item-control {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
+
+    <div id="app-container" class="w-full max-w-2xl p-6 md:p-10 rounded-xl container-card">
+        <h1 id="main-title" class="text-3xl font-bold text-center mb-8 color-primary">
+            測驗學習系統
+        </h1>
+        <p class="text-xs text-center text-gray-500 mb-6">
+            用戶 ID: <span id="user-id-display" class="font-medium">Connecting...</span>
+        </p>
+        
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="flex flex-col items-center justify-center h-48">
+            <div class="spinner mb-4 border-t-blue-500 border-gray-200"></div>
+            <p class="color-primary font-medium">系統載入中...</p>
+        </div>
+
+        <!-- 0. 題庫管理器 (Bank Manager) -->
+        <div id="bank-manager-section" class="hidden space-y-6">
+            <h2 class="text-xl font-semibold border-b pb-2 color-primary">
+                題庫管理中心
+            </h2>
+            
+            <!-- 錯誤訊息顯示區 -->
+            <div id="manager-feedback" class="hidden error-message-card p-3 rounded-lg text-sm text-center font-medium">
+                <!-- Message will be inserted here -->
+            </div>
+
+            <p id="current-bank-display" class="text-lg text-gray-700">當前題庫: <span class="font-bold text-gray-900">未載入</span></p>
+
+            <div class="space-y-3 p-4 input-card">
+                <label for="new-bank-name" class="block text-sm font-medium text-gray-600">新增題庫名稱 (僅限英數字)</label>
+                <input type="text" id="new-bank-name"
+                    class="w-full p-2 border rounded-md"
+                    placeholder="輸入新題庫名稱">
+                <button onclick="createNewBank()" id="create-bank-button"
+                    class="w-full py-2 px-4 button-primary rounded-lg shadow-md mt-2" disabled>
+                    <span>建立並啟用</span>
+                </button>
+            </div>
+
+            <!-- 主題庫列表 -->
+            <div class="space-y-4 p-4 input-card">
+                <h3 class="text-lg font-semibold color-primary border-b border-gray-300 pb-1">主題題庫</h3>
+                <div id="master-bank-list" class="space-y-2 max-h-48 overflow-y-auto">
+                    <p class="text-gray-500">掃描中...</p>
+                </div>
+            </div>
+
+            <!-- 錯題庫列表 -->
+            <div class="space-y-4 p-4 input-card border-l-4 border-red-300">
+                <h3 class="text-lg font-semibold color-danger border-b border-gray-300 pb-1">錯題紀錄 (歷史記錄)</h3>
+                <div id="error-bank-list" class="space-y-2 max-h-48 overflow-y-auto">
+                    <p class="text-gray-500">無錯題紀錄。</p>
+                </div>
+            </div>
+
+            <button onclick="hideBankManager()" id="continue-bank-button"
+                class="w-full py-3 px-4 button-secondary rounded-lg shadow-lg">
+                <span>繼續使用當前載入的題庫</span>
+            </button>
+        </div>
+
+
+        <!-- 1. 測驗設定區 (Q&A 輸入) --><div id="setup-section" class="hidden space-y-6">
+            <h2 class="text-xl font-semibold border-b pb-2 color-primary">
+                測驗數據配置
+                <span id="active-bank-name" class="font-bold text-gray-700 float-right"></span>
+            </h2>
+
+            <div id="error-bank-info" class="text-center font-medium text-lg hidden p-2 border border-red-500 bg-red-50 rounded-lg text-red-700">
+                <p class="font-bold">--- 錯題庫複習模式：無法編輯題目 ---</p>
+            </div>
+
+            <div id="qa-list" class="space-y-4">
+                <!-- Q&A 輸入卡片將在此處動態生成 --></div>
+
+            <button onclick="addQAPair()"
+                class="w-full py-3 px-4 button-primary rounded-lg shadow-md">
+                <span>+ 新增一組問題與答案</span>
+            </button>
+
+            <button onclick="startQuiz()" id="start-button"
+                class="w-full mt-6 py-3 px-4 button-secondary rounded-lg shadow-lg disabled:opacity-50"
+                disabled>
+                <span>開始測驗</span>
+            </button>
+            <p id="qa-count-message" class="text-sm text-center color-danger hidden">
+                [ 錯誤: 數據不足 ] 至少需要一組完整的 Q&A。
+            </p>
+            <button onclick="showBankManager()"
+                class="w-full py-2 px-4 bg-gray-200 text-gray-700 rounded-lg shadow-sm text-sm mt-4 hover:bg-gray-300 transition duration-150">
+                <span>管理題庫 / 儲存</span>
+            </button>
+        </div>
+
+        <!-- 2. 測驗進行區 --><div id="quiz-section" class="hidden space-y-6">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-2xl font-semibold color-primary">
+                    測驗進行中
+                </h2>
+                <span id="progress-text" class="text-lg font-medium text-gray-600"></span>
+            </div>
+
+            <div class="p-6 rounded-xl quiz-question-box">
+                <p class="text-lg font-medium text-gray-500 mb-2">問題:</p>
+                <p id="question-text" class="text-xl font-bold text-gray-800">載入問題...</p>
+            </div>
+
+            <label for="answer-input" class="block text-lg font-medium text-gray-700 mt-4">您的答案:</label>
+            <input type="text" id="answer-input"
+                class="w-full p-3 border-2 rounded-lg text-lg"
+                placeholder="在此輸入答案..." onkeydown="handleEnter(event)">
+
+            <div id="feedback-area" class="min-h-12 text-center py-2 rounded-lg font-semibold transition duration-300 text-gray-900">
+                <!-- 測驗結果回饋將顯示在此處 --></div>
+
+            <button onclick="submitAnswer()" id="quiz-button"
+                class="w-full py-3 px-4 button-primary rounded-lg shadow-lg">
+                <span>送出答案</span>
+            </button>
+        </div>
+
+        <!-- 3. 結果顯示區 --><div id="result-section" class="hidden text-center space-y-6">
+            <h2 class="text-3xl font-bold color-success">
+                測驗完成！
+            </h2>
+            <div class="p-6 rounded-xl shadow-lg border border-gray-200 bg-white">
+                <p class="text-xl text-gray-600">您的成績:</p>
+                <p id="final-score" class="text-6xl font-extrabold mt-2 color-primary">--/--</p>
+            </div>
+
+            <button id="review-mistakes-button" onclick="startErrorBankQuiz()"
+                class="w-full py-3 px-4 button-error-review rounded-lg shadow-lg hidden">
+                <span>複習錯題 (0 題錯誤)</span>
+            </button>
+
+            <div class="text-left p-6 rounded-lg shadow-inner bg-gray-50 border border-gray-200">
+                <h3 class="text-xl font-semibold mb-3 color-primary border-b pb-1">
+                    答案回顧
+                </h3>
+                <div id="review-list" class="space-y-3">
+                    <!-- 答案回顧列表將在此處顯示 --></div>
+            </div>
+
+            <button onclick="showBankManager()"
+                class="w-full py-3 px-4 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300">
+                <span>管理題庫 / 新測驗</span>
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase vars
+        let db;
+        let auth;
+        let userId;
+        let appId;
+        let isAuthReady = false;
+        
+        // Global variable to manage listener subscription
+        let unsubscribeFromBank = null; 
+
+        // Quiz Bank State
+        let currentBankId = 'default_bank'; // Unique slugified ID for the active bank
+        let currentBankName = '預設題庫'; // Display name for the active bank
+        let allAvailableBanks = []; // NEW: Array of ALL {id, name, isError}
+        let isErrorBankActive = false; 
+
+        // Core App State
+        let qaPairs = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let quizQuestions = []; 
+
+        // --- DOM Elements ---
+        const setupSection = document.getElementById('setup-section');
+        const quizSection = document.getElementById('quiz-section');
+        const resultSection = document.getElementById('result-section');
+        const bankManagerSection = document.getElementById('bank-manager-section');
+        const loadingScreen = document.getElementById('loading-screen');
+        const qaList = document.getElementById('qa-list');
+        const startButton = document.getElementById('start-button');
+        const qaCountMessage = document.getElementById('qa-count-message');
+        const newBankNameInput = document.getElementById('new-bank-name');
+        const createBankButton = document.getElementById('create-bank-button');
+        const masterBankList = document.getElementById('master-bank-list'); // NEW
+        const errorBankList = document.getElementById('error-bank-list');   // NEW
+        const currentBankDisplay = document.getElementById('current-bank-display');
+        const activeBankNameDisplay = document.getElementById('active-bank-name');
+        const continueBankButton = document.getElementById('continue-bank-button');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const errorBankInfo = document.getElementById('error-bank-info');
+        const reviewMistakesButton = document.getElementById('review-mistakes-button');
+        const managerFeedback = document.getElementById('manager-feedback'); // NEW
+
+        // Utility functions
+        let saveTimeout;
+        function debounceSave() {
+            if (!isAuthReady || currentBankId === 'loading' || currentBankId === 'default_bank') return;
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(saveQuizBank, 1500); // Save after 1.5 seconds of inactivity
+        }
+
+        function slugify(text) {
+            return text.toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9\u4e00-\u9fa5 -]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/--+/g, '-');
+        }
+        
+        /**
+         * 取得主題庫或錯題庫的 ID
+         * @param {string} baseId - 基礎題庫 ID (不含 -error)
+         * @param {boolean} isError - 是否為錯題庫
+         * @returns {string} 完整的 ID
+         */
+        function getBankId(baseId, isError = false) {
+             // 修正: 由於要使用時間戳，我們將不再使用這個簡單的 -error 後綴。
+             // 這個函式現在主要用於獲取錯題的「根 ID」，用於分類。
+            return isError ? `${baseId}-error-log` : baseId; 
+        }
+        
+        /**
+         * 從錯題庫 ID 獲取基礎主題庫 ID
+         * @param {string} bankId - 錯題庫 ID (含時間戳)
+         * @returns {string} 基礎主題庫 ID
+         */
+        function getBaseBankId(bankId) {
+             // 修正: 獲取主 ID 的新邏輯
+            return bankId.split('-error-')[0];
+        }
+        
+        /**
+         * 檢查 ID 是否為錯題庫 (含時間戳)
+         * @param {string} bankId - 題庫 ID
+         * @returns {boolean}
+         */
+        function isErrorBank(bankId) {
+            return bankId.includes('-error-');
+        }
+
+        // --- FIREBASE AND DATA PERSISTENCE ---
+
+        async function setupFirebase() {
+            userIdDisplay.textContent = 'Authenticating...';
+            currentBankId = 'loading';
+            loadingScreen.classList.remove('hidden');
+
+            try {
+                // Get global variables
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+                if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
+                    console.error("Firebase config is missing. Data persistence disabled.");
+                    isAuthReady = true;
+                    currentBankId = 'default_bank';
+                    loadingScreen.classList.add('hidden');
+                    window.showBankManager();
+                    return;
+                }
+
+                // Initialize App and Services
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('debug');
+
+                // Authenticate
+                await new Promise(resolve => {
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            resolve();
+                        } else {
+                            try {
+                                if (initialAuthToken) {
+                                    await signInWithCustomToken(auth, initialAuthToken);
+                                } else {
+                                    await signInAnonymously(auth);
+                                }
+                                userId = auth.currentUser.uid;
+                            } catch (e) {
+                                console.error("Authentication failed:", e);
+                                userId = crypto.randomUUID(); 
+                            }
+                            resolve();
+                        }
+                    });
+                });
+
+                userIdDisplay.textContent = userId.substring(0, 8) + '...';
+                isAuthReady = true;
+                currentBankId = 'default_bank';
+                isErrorBankActive = false; 
+
+                // Load bank metadata and show manager
+                await window.loadBankNames(); // FIXED: Changed loadBankNames() to window.loadBankNames()
+                loadingScreen.classList.add('hidden');
+                window.showBankManager();
+
+            } catch (error) {
+                console.error("Firebase setup failed:", error);
+                userId = crypto.randomUUID();
+                userIdDisplay.textContent = userId.substring(0, 8) + '... (Local)';
+                isAuthReady = true; 
+                currentBankId = 'default_bank';
+                loadingScreen.classList.add('hidden');
+                window.showBankManager();
+            }
+        }
+
+        function getBankCollectionRef() {
+            if (!db || !userId || !appId) return null;
+            return collection(db, 'artifacts', appId, 'users', userId, 'quiz_banks');
+        }
+
+        function getBankDocRef(bankId) {
+            const colRef = getBankCollectionRef();
+            if (!colRef) return null;
+            return doc(colRef, bankId);
+        }
+
+        function getBankMetadataRef() {
+            if (!db || !userId || !appId) return null;
+            return doc(db, 'artifacts', appId, 'users', userId, 'metadata', 'quiz_banks_list');
+        }
+
+        // --- Bank Metadata Management ---
+
+        window.loadBankNames = async function() { // FIXED: Attached loadBankNames to window
+            if (!isAuthReady || !db || !userId) return;
+
+            const metadataRef = getBankMetadataRef();
+            const docSnap = await getDoc(metadataRef);
+
+            if (docSnap.exists() && docSnap.data().banks) {
+                allAvailableBanks = docSnap.data().banks;
+            } else {
+                const defaultBankDoc = await getDoc(getBankDocRef('default_bank'));
+                if (defaultBankDoc.exists()) {
+                    allAvailableBanks = [{ id: 'default_bank', name: '預設題庫', isError: false }];
+                } else {
+                    allAvailableBanks = [];
+                }
+            }
+            renderBankList();
+        }
+
+        async function saveBankMetadata() {
+            if (!isAuthReady || !db || !userId) return;
+            const metadataRef = getBankMetadataRef();
+            
+            try {
+                // Ensure allAvailableBanks contains unique items before saving
+                const uniqueBanks = [];
+                const bankIds = new Set();
+                allAvailableBanks.forEach(bank => {
+                    if (!bankIds.has(bank.id)) {
+                        bankIds.add(bank.id);
+                        uniqueBanks.push(bank);
+                    }
+                });
+                
+                await setDoc(metadataRef, { banks: uniqueBanks, updatedAt: new Date().toISOString() });
+                console.log("[STORAGE] Bank metadata saved.");
+            } catch (e) {
+                console.error("[STORAGE] Error saving bank metadata:", e);
+            }
+        }
+        
+        // --- Data Saving and Loading ---
+
+        async function saveQuizBank() {
+            if (!isAuthReady || !db || !userId || currentBankId === 'loading') {
+                console.log("[STORAGE] Save skipped.");
+                return;
+            }
+
+            const docRef = getBankDocRef(currentBankId);
+            if (!docRef) {
+                console.error("[STORAGE] Could not get document reference for saving.");
+                return;
+            }
+
+            try {
+                const pairsToSave = qaPairs.filter(p => p.question.trim() && p.answer.trim());
+                
+                await setDoc(docRef, {
+                    qaPairs: JSON.stringify(pairsToSave),
+                    name: currentBankName,
+                    updatedAt: new Date().toISOString(),
+                    // 修正: 使用 isErrorBank 檢查新的時間戳 ID
+                    isErrorBank: isErrorBank(currentBankId) 
+                }, { merge: true });
+                console.log(`[STORAGE] Bank '${currentBankName}' saved successfully. Total pairs: ${pairsToSave.length}`);
+            } catch (e) {
+                console.error("[STORAGE] Error saving quiz bank:", e);
+            }
+        }
+
+        async function loadQuizBank(bankId, bankName, isError = false) {
+            if (!isAuthReady || !db || !userId) return;
+            
+            if (unsubscribeFromBank) {
+                unsubscribeFromBank();
+                unsubscribeFromBank = null;
+            }
+
+            currentBankId = bankId;
+            currentBankName = bankName;
+            isErrorBankActive = isError; 
+            qaPairs = [];
+            renderQAList(true); 
+            
+            currentBankDisplay.innerHTML = `當前題庫: <span class="font-bold text-gray-900">${bankName}</span>`; // FIX: Removed tech-font and neon-yellow classes
+            activeBankNameDisplay.textContent = bankName;
+            errorBankInfo.classList.toggle('hidden', !isError);
+            managerFeedback.classList.add('hidden'); // Clear feedback on load
+
+            const docRef = getBankDocRef(bankId);
+            
+            try {
+                const docSnap = await getDoc(docRef); 
+                if (docSnap.exists() && docSnap.data().qaPairs) {
+                    const loadedPairs = JSON.parse(docSnap.data().qaPairs);
+                    qaPairs = loadedPairs;
+                    renderQAList(true); 
+                    console.log(`[STORAGE] Bank '${bankName}' loaded from cloud. Total pairs: ${qaPairs.length}`);
+                } else {
+                    console.log(`[STORAGE] No data found for bank '${bankName}'. Starting fresh.`);
+                    if (qaPairs.length === 0 && !isError) window.addQAPair(true);
+                }
+            } catch(e) {
+                console.error("Initial doc load failed:", e);
+                // **重點修復:** 如果在載入數據庫時失敗，確保仍然呼叫 renderQAList(true) 來初始化介面。
+                // 這是為了處理舊數據庫結構可能導致的解析錯誤，但我們仍然需要確保 QA 列表被正確初始化。
+                renderQAList(true); // 重新呼叫一次，以確保即使加載失敗，qaPairs 仍然是空的且介面被清除。
+                if (qaPairs.length === 0 && !isError) window.addQAPair(true);
+            }
+            
+            // NEW LOGIC: Check for empty error bank after loading
+            if (isError && qaPairs.length === 0) {
+                 // If an error bank is empty, show feedback and revert to bank manager
+                managerFeedback.innerHTML = `[ WARNING: ERROR BANK EMPTY ] 錯題庫 ${bankName} 沒有任何題目。請先回主題庫進行測驗並產生錯題。`;
+                managerFeedback.classList.remove('hidden');
+                window.showBankManager(); 
+                return;
+            }
+
+
+            window.checkStartButton();
+            window.hideBankManager();
+            
+            unsubscribeFromBank = onSnapshot(docRef, (snap) => {
+                 console.log(`[STORAGE] Snapshot received for ${bankName}, skipping full UI refresh to preserve input.`);
+            }, (error) => {
+                console.error("[STORAGE] Error setting up snapshot listener:", error);
+            });
+        }
+        
+        // --- BANK MANAGER UI LOGIC ---
+
+        function renderBankList() {
+            masterBankList.innerHTML = '';
+            errorBankList.innerHTML = '';
+            let hasMasterBanks = false;
+            
+            // 修正: 重新定義分類邏輯
+            const masterBanks = allAvailableBanks.filter(bank => !isErrorBank(bank.id));
+            const errorBanks = allAvailableBanks.filter(bank => isErrorBank(bank.id));
+            
+            // 排序錯題庫，讓最新的顯示在前面
+            errorBanks.sort((a, b) => b.id.localeCompare(a.id)); 
+
+            // 1. Render Master Banks
+            if (masterBanks.length === 0) {
+                masterBankList.innerHTML = '<p class="text-gray-500">無主題題庫。請在上方新增一個！</p>'; // FIX: Translated text
+            } else {
+                hasMasterBanks = true;
+                masterBanks.forEach(bank => {
+                    const item = document.createElement('div');
+                    item.className = 'flex justify-between items-center p-2 rounded-md list-item-control hover:bg-gray-200 transition duration-150 cursor-pointer'; // FIX: Simplified classes
+                    
+                    const controls = document.createElement('div');
+                    controls.className = 'flex items-center space-x-2';
+
+                    // LOAD Button
+                    const loadBtn = document.createElement('button');
+                    loadBtn.className = 'text-sm bg-blue-100 text-blue-700 py-1 px-3 rounded-md hover:bg-blue-200'; // FIX: Flat design button
+                    loadBtn.textContent = '載入'; // FIX: Translated text
+                    loadBtn.onclick = () => window.loadSelectedBank(bank.id, bank.name);
+                    controls.appendChild(loadBtn);
+
+                    // DELETE Button
+                    if (bank.id !== currentBankId) { // Prevent deleting the currently active bank
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'text-sm bg-red-100 text-red-700 py-1 px-3 rounded-md hover:bg-red-200'; // FIX: Flat delete button
+                        deleteBtn.textContent = '刪除'; // FIX: Translated text
+                        deleteBtn.onclick = (e) => {
+                            e.stopPropagation(); // Stop propagation to prevent accidental load
+                            window.deleteBank(bank.id, bank.name); // 刪除主庫
+                        };
+                        controls.appendChild(deleteBtn);
+                    }
+                    
+                    item.innerHTML = `<span class="font-medium text-gray-800">${bank.name}</span>`; // FIX: Simplified display
+                    item.appendChild(controls);
+
+                    masterBankList.appendChild(item);
+                });
+            }
+
+            // 2. Render Error Banks
+            if (errorBanks.length === 0) {
+                errorBankList.innerHTML = '<p class="text-gray-500">無錯題紀錄。</p>'; // FIX: Translated text
+            } else {
+                errorBanks.forEach(bank => {
+                    const baseId = getBaseBankId(bank.id);
+                    const masterBank = masterBanks.find(m => m.id === baseId);
+                    
+                    // 修正名稱顯示: [主庫名] - [日期/時間]
+                    let displayName = `${masterBank ? masterBank.name : baseId} - `;
+                    // 嘗試從 ID 提取時間戳
+                    const timestampMatch = bank.id.match(/-(\d{8}-\d{6})$/);
+                    if (timestampMatch) {
+                        const ts = timestampMatch[1];
+                        displayName += `記錄 ${ts.substring(0, 4)}/${ts.substring(4, 6)}/${ts.substring(6, 8)} ${ts.substring(9, 11)}:${ts.substring(11, 13)}`; // FIX: Translated text
+                    } else {
+                        displayName += '未知記錄'; // FIX: Translated text
+                    }
+
+                    const item = document.createElement('div');
+                    item.className = 'flex justify-between items-center p-2 rounded-md bg-red-50 hover:bg-red-100 transition duration-150 cursor-pointer border border-red-200'; // FIX: Simplified red highlight
+                    
+                    const controls = document.createElement('div');
+                    controls.className = 'flex items-center space-x-2';
+                    
+                    // START REVIEW Button
+                    const reviewBtn = document.createElement('button');
+                    reviewBtn.className = 'text-sm bg-red-500 text-white py-1 px-3 rounded-md hover:bg-red-600'; // FIX: Flat red button
+                    reviewBtn.textContent = '開始複習'; // FIX: Translated text
+                    reviewBtn.onclick = () => window.loadSelectedErrorBank(bank.id, displayName);
+                    controls.appendChild(reviewBtn);
+                    
+                    // DELETE LOG Button (NEW)
+                    const deleteLogBtn = document.createElement('button');
+                    deleteLogBtn.className = 'text-sm bg-gray-300 text-gray-700 py-1 px-3 rounded-md hover:bg-gray-400'; // FIX: Flat gray button
+                    deleteLogBtn.textContent = '清除記錄'; // FIX: Translated text
+                    deleteLogBtn.onclick = (e) => {
+                         e.stopPropagation();
+                         window.deleteLog(bank.id, displayName); // 刪除單個 Log
+                    };
+                    controls.appendChild(deleteLogBtn);
+
+
+                    item.innerHTML = `<span class="font-medium text-red-700">${displayName}</span>`; // FIX: Simplified display
+                    item.appendChild(controls);
+                    errorBankList.appendChild(item);
+                });
+            }
+            
+            // 3. Update Continue Button
+            const hasActiveBank = currentBankId !== 'default_bank' || (hasMasterBanks && qaPairs.length > 0);
+            
+            if (hasActiveBank) {
+                continueBankButton.disabled = false;
+                const baseName = currentBankName.replace(' (錯題庫)', '').replace(' (錯題)', '').replace('記錄', '紀錄'); // FIX: Clean up display name
+                const name = isErrorBankActive ? `${baseName}` : baseName;
+                continueBankButton.textContent = `繼續編輯/測驗: ${name}`;
+            } else {
+                continueBankButton.disabled = true;
+                continueBankButton.textContent = '請先建立或載入題庫';
+            }
+        }
+        
+        /**
+         * 刪除單個錯題記錄
+         */
+        window.deleteLog = async function(logId, logName) {
+            managerFeedback.classList.add('hidden');
+            
+            if (!await showConfirmation(`[ 確認刪除 ] 您確定要永久清除這份錯題紀錄嗎: ${logName}?`)) { // FIX: Translated text
+                return;
+            }
+
+            try {
+                // 1. 刪除 Log 文件
+                const docRef = getBankDocRef(logId);
+                await deleteDoc(docRef);
+                console.log(`[STORAGE] Deleted error log document: ${logId}`);
+
+                // 2. 從 metadata 中移除
+                allAvailableBanks = allAvailableBanks.filter(b => b.id !== logId);
+                await saveBankMetadata();
+                
+                // 3. 更新 UI
+                managerFeedback.innerHTML = `[ 成功 ] 錯題紀錄 '${logName}' 已清除。`; // FIX: Translated text
+                managerFeedback.classList.remove('hidden');
+                
+                // 4. 檢查當前活動題庫
+                if (currentBankId === logId) {
+                    currentBankId = 'default_bank';
+                    currentBankName = '預設題庫';
+                    isErrorBankActive = false;
+                    qaPairs = [];
+                    window.addQAPair(true);
+                }
+
+                renderBankList();
+
+            } catch (e) {
+                console.error("[STORAGE ERROR] Failed to delete error log:", e);
+                managerFeedback.innerHTML = `[ 錯誤 ] 無法清除錯題紀錄 '${logName}'。請查看控制台。`; // FIX: Translated text
+                managerFeedback.classList.remove('hidden');
+            }
+        }
+
+
+        /**
+         * 刪除主題庫及其相關的錯題庫
+         * @param {string} bankId - 要刪除的主題庫 ID
+         * @param {string} bankName - 要刪除的主題庫名稱
+         */
+        window.deleteBank = async function(bankId, bankName) {
+            managerFeedback.classList.add('hidden');
+            
+            if (bankId === 'default_bank') {
+                managerFeedback.innerHTML = `[ 錯誤 ] 無法刪除預設題庫。`; // FIX: Translated text
+                managerFeedback.classList.remove('hidden');
+                return;
+            }
+
+            // Custom confirmation dialog (replacing native alert/confirm)
+            if (!await showConfirmation(`[ 確認刪除 ] 您確定要永久刪除主題題庫 "${bankName}" 嗎？所有相關的錯題紀錄也將一併被清除。`)) { // FIX: Translated text
+                return;
+            }
+
+            try {
+                // 1. 刪除主題庫文件
+                const mainDocRef = getBankDocRef(bankId);
+                await deleteDoc(mainDocRef);
+                console.log(`[STORAGE] Deleted main bank document: ${bankId}`);
+
+                // 2. 刪除所有相關的錯題庫文件
+                const logsToDelete = allAvailableBanks.filter(b => isErrorBank(b.id) && getBaseBankId(b.id) === bankId);
+                for (const log of logsToDelete) {
+                    const logDocRef = getBankDocRef(log.id);
+                    await deleteDoc(logDocRef).catch(e => console.warn(`[STORAGE] Error deleting associated log (may not exist): ${log.id}`, e));
+                }
+                console.log(`[STORAGE] Deleted ${logsToDelete.length} associated error log(s).`);
+
+                // 3. 從 metadata 中移除
+                allAvailableBanks = allAvailableBanks.filter(b => b.id !== bankId && !isErrorBank(b.id) || getBaseBankId(b.id) !== bankId);
+                await saveBankMetadata();
+                
+                // 4. 更新 UI
+                managerFeedback.innerHTML = `[ 成功 ] 主題題庫 "${bankName}" 及其所有紀錄已清除。`; // FIX: Translated text
+                managerFeedback.classList.remove('hidden');
+                
+                // 5. 檢查當前活動題庫是否被刪除
+                if (currentBankId === bankId || isErrorBank(currentBankId) && getBaseBankId(currentBankId) === bankId) {
+                    currentBankId = 'default_bank';
+                    currentBankName = '預設題庫';
+                    isErrorBankActive = false;
+                    qaPairs = [];
+                    window.addQAPair(true);
+                }
+
+                renderBankList();
+
+            } catch (e) {
+                console.error("[STORAGE ERROR] Failed to delete bank:", e);
+                managerFeedback.innerHTML = `[ 錯誤 ] 無法刪除主題題庫 "${bankName}"。請查看控制台。`; // FIX: Translated text
+                managerFeedback.classList.remove('hidden');
+            }
+        }
+        
+        /**
+         * 自定義確認對話框 (取代 alert/confirm)
+         * @param {string} message 
+         * @returns {Promise<boolean>}
+         */
+        async function showConfirmation(message) {
+            const confirmed = window.confirm(message); // 警告: 由於限制，這裡仍需依賴 window.confirm
+            return confirmed;
+        }
+
+
+        // NEW: Load Error Bank Function
+        window.loadSelectedErrorBank = function(bankId, bankName) {
+            // Check if bank has pairs before loading (optional optimization)
+            loadQuizBank(bankId, bankName, true);
+        }
+
+        window.loadSelectedBank = function(bankId, bankName) {
+            // Load as a normal bank (not an error bank)
+            loadQuizBank(bankId, bankName, false);
+        }
+        
+        window.createNewBank = async function() {
+            const name = newBankNameInput.value.trim();
+            if (name === '') return;
+            const id = slugify(name);
+
+            // Check if ID already exists (main bank only)
+            if (allAvailableBanks.some(bank => bank.id === id)) {
+                newBankNameInput.value = '';
+                newBankNameInput.placeholder = '名稱已存在! 輸入新名稱。'; // FIX: Translated text
+                managerFeedback.innerHTML = `[ 錯誤 ] 題庫 ID '${id}' 已存在。`; // FIX: Translated text
+                managerFeedback.classList.remove('hidden');
+                return;
+            }
+
+            // Add main bank to metadata
+            allAvailableBanks.push({ id: id, name: name, isError: false });
+            await saveBankMetadata(); 
+            
+            // Activate the new main bank
+            loadQuizBank(id, name, false);
+            newBankNameInput.value = '';
+            renderBankList();
+        }
+
+        newBankNameInput.oninput = function() {
+            createBankButton.disabled = newBankNameInput.value.trim().length < 1;
+        }
+
+        window.showBankManager = function() {
+            quizSection.classList.add('hidden');
+            setupSection.classList.add('hidden');
+            resultSection.classList.add('hidden');
+            bankManagerSection.classList.remove('hidden');
+            window.loadBankNames(); 
+            
+            const baseName = currentBankName.replace(' (錯題庫)', '').replace(' (錯題)', '').replace('記錄', '紀錄'); // FIX: Clean up display name
+            const name = isErrorBankActive ? `${baseName}` : baseName;
+
+            currentBankDisplay.innerHTML = `當前題庫: <span class="font-bold text-gray-900">${name}</span>`; // FIX: Simplified classes
+            
+            // Re-check button status based on current state
+            const hasActiveBank = currentBankId !== 'default_bank' || (allAvailableBanks.length > 0 && !allAvailableBanks.every(b => isErrorBank(b.id)));
+            
+            if (hasActiveBank) {
+                continueBankButton.disabled = false;
+                continueBankButton.textContent = `繼續編輯/測驗: ${name}`;
+            } else {
+                continueBankButton.disabled = true;
+                continueBankButton.textContent = '請先建立或載入題庫';
+            }
+        }
+
+        window.hideBankManager = function() {
+            bankManagerSection.classList.add('hidden');
+            setupSection.classList.remove('hidden');
+        }
+
+        window.continueBank = function() {
+             window.hideBankManager();
+        }
+
+
+        // --- UI & GAME LOGIC (Simplified/Adapted) ---
+
+        /**
+         * 檢查 Q&A 列表的有效性並啟用/禁用開始按鈕
+         */
+        window.checkStartButton = function() { 
+            const validCount = qaPairs.filter(pair =>
+                pair.question.trim().length > 0 && pair.answer.trim().length > 0
+            ).length;
+
+            if (validCount > 0) {
+                startButton.disabled = false;
+                qaCountMessage.classList.add('hidden');
+            } else {
+                startButton.disabled = true;
+                qaCountMessage.classList.remove('hidden');
+            }
+            
+            // Disable Q&A editing controls if in Error Bank Mode
+            const controls = document.querySelectorAll('.qa-question, .qa-answer, #add-qa-button, .button-danger');
+            controls.forEach(control => {
+                if (isErrorBankActive) {
+                    control.disabled = true;
+                } else {
+                    if (control.classList.contains('qa-question') || control.classList.contains('qa-answer')) {
+                         control.disabled = false;
+                    } 
+                }
+            });
+            // Hiding the main Add button if in Error Bank (as it's read-only)
+            document.querySelector('button[onclick="addQAPair()"]').classList.toggle('hidden', isErrorBankActive);
+        }
+
+        /**
+         * 創建並添加一個新的 Q&A 輸入卡片到 DOM
+         * @param {boolean} skipSave - 是否跳過 debounceSave
+         * @returns {HTMLElement | undefined} - 返回新創建的卡片元素，或在錯題庫模式下返回 undefined
+         */
+        window.addQAPair = function(skipSave = false) {
+            
+            // 這裡的邏輯是: 如果是 ErrorBank 且不是初始化(skipSave=true)，則不應允許新增。
+            if (isErrorBankActive && !skipSave) return; // 不允許手動新增
+
+            const index = qaPairs.length;
+            qaPairs.push({ question: '', answer: '' });
+
+            const card = document.createElement('div');
+            card.id = `qa-card-${index}`;
+            card.className = 'input-card p-4 rounded-lg shadow-sm space-y-3 relative';
+
+            // Check button disable status here to ensure it's set correctly
+            const disableAttr = isErrorBankActive ? 'disabled' : '';
+
+            card.innerHTML = `
+                <div class="absolute top-2 right-2">
+                    <button onclick="removeQAPair(event, ${index})"
+                        class="text-sm bg-gray-300 text-gray-700 p-1 rounded-full hover:bg-gray-400 transition duration-150"
+                        title="移除此組題目" ${disableAttr}>
+                        <!-- SVG icon for delete -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-current" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 9a1 1 0 012 0v6a1 1 0 11-2 0V9zm6 0a1 1 0 012 0v6a1 1 0 11-2 0V9z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+                <label class="block text-sm font-medium text-gray-600">問題 ${index + 1}:</label>
+                <textarea
+                    id="qa-question-${index}"
+                    class="qa-question w-full p-2 border rounded-md"
+                    rows="2"
+                    placeholder="輸入問題"
+                    oninput="updateQAPair(${index}, 'question', this.value); checkStartButton();" ${disableAttr}></textarea>
+
+                <label class="block text-sm font-medium text-gray-600">答案 ${index + 1}:</label>
+                <input
+                    type="text"
+                    id="qa-answer-${index}"
+                    class="qa-answer w-full p-2 border rounded-md"
+                    placeholder="輸入正確答案"
+                    oninput="updateQAPair(${index}, 'answer', this.value); checkStartButton();" ${disableAttr}>
+            `; // FIX: Translated text/placeholders, simplified button
+
+            qaList.appendChild(card);
+            window.checkStartButton();
+            if (!skipSave) debounceSave(); 
+            return card;
+        }
+
+        window.updateQAPair = function(index, field, value) {
+            if (qaPairs[index] && !isErrorBankActive) {
+                qaPairs[index][field] = value;
+                debounceSave();
+            }
+        }
+
+        window.removeQAPair = function(event, indexToRemove) { // FIXED: Added event argument
+            event.stopPropagation(); // FIXED: Stop event propagation to prevent unintended actions (e.g. hovering/clicking container)
+            
+            if (isErrorBankActive) return;
+
+            const card = document.getElementById(`qa-card-${indexToRemove}`);
+            if (card) qaList.removeChild(card);
+
+            qaPairs = qaPairs.filter((_, index) => index !== indexToRemove);
+            renderQAList(); // Call renderQAList to rebuild and re-index correctly
+            window.checkStartButton();
+
+            if (qaPairs.length === 0) window.addQAPair();
+            debounceSave(); 
+        }
+
+        /**
+         * 重新渲染整個 Q&A 輸入列表，用於移除項目後更新索引
+         */
+        function renderQAList(isInitialLoad = false) {
+            qaList.innerHTML = '';
+            const tempPairs = [...qaPairs]; 
+            qaPairs = []; 
+            tempPairs.forEach((pair) => {
+                // Capture the newly created card returned by addQAPair
+                const newCard = window.addQAPair(true); 
+                
+                // **修復:** 檢查 newCard 是否為 undefined (如果 addQAPair 錯誤地返回了 undefined)
+                if (newCard) {
+                    const newIndex = qaPairs.length - 1;
+                    
+                    // Use querySelector on the specific card to find elements robustly
+                    const questionEl = newCard.querySelector('.qa-question');
+                    const answerEl = newCard.querySelector('.qa-answer');
+
+                    if (questionEl) questionEl.value = pair.question;
+                    if (answerEl) answerEl.value = pair.answer;
+
+                    qaPairs[newIndex] = pair; 
+                } else {
+                    // 如果 newCard 是 undefined，表示 addQAPair 在初始化時被錯誤禁止。
+                    // 這裡的 console.warn 是為了偵錯，但程式碼現在應該是穩定的。
+                    console.warn("renderQAList failed to create new card for pair, possible Error Bank issue.");
+                }
+            });
+            window.checkStartButton();
+            if (!isInitialLoad) {
+                debounceSave(); 
+            }
+        }
+
+        // --- QUIZ LOGIC (Simplified/Adapted) ---
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        window.startQuiz = function() {
+            const validQAPairs = qaPairs.filter(pair =>
+                pair.question.trim().length > 0 && pair.answer.trim().length > 0
+            );
+
+            if (validQAPairs.length === 0) {
+                qaCountMessage.classList.remove('hidden');
+                return;
+            }
+
+            quizQuestions = shuffle(validQAPairs);
+            currentQuestionIndex = 0;
+            score = 0;
+
+            setupSection.classList.add('hidden');
+            resultSection.classList.add('hidden');
+            quizSection.classList.remove('hidden');
+
+            window.displayQuestion();
+        }
+        
+        window.displayQuestion = function() {
+            const currentQA = quizQuestions[currentQuestionIndex];
+            
+            const progressText = document.getElementById('progress-text');
+            const questionText = document.getElementById('question-text');
+            const answerInput = document.getElementById('answer-input');
+            const feedbackArea = document.getElementById('feedback-area');
+            const quizButton = document.getElementById('quiz-button');
+            
+            progressText.textContent = `進度: ${currentQuestionIndex + 1}/${quizQuestions.length}`; // FIX: Translated text
+            questionText.textContent = currentQA.question;
+            answerInput.value = '';
+            answerInput.disabled = false;
+            answerInput.focus();
+            feedbackArea.innerHTML = '';
+            feedbackArea.className = 'min-h-12 text-center py-2 rounded-lg font-semibold transition duration-300 text-gray-900'; // FIX: Simplified classes
+            quizButton.textContent = '送出答案'; // FIX: Translated text
+            quizButton.onclick = window.submitAnswer;
+        }
+
+        window.handleEnter = function(event) {
+            const quizButton = document.getElementById('quiz-button');
+            if (event.key === 'Enter') {
+                event.preventDefault(); 
+                if (quizButton.textContent === '送出答案') { // FIX: Changed text check
+                    window.submitAnswer();
+                } else {
+                    window.nextQuestion();
+                }
+            }
+        }
+
+        window.submitAnswer = function() {
+            const answerInput = document.getElementById('answer-input');
+            const feedbackArea = document.getElementById('feedback-area');
+            const quizButton = document.getElementById('quiz-button');
+            
+            const userAnswer = answerInput.value.trim();
+            const currentQA = quizQuestions[currentQuestionIndex];
+            const correctAnswer = currentQA.answer.trim();
+
+            if (userAnswer === '') {
+                feedbackArea.innerHTML = `<span class="color-danger">請輸入答案！</span>`; // FIX: Translated text
+                feedbackArea.className = 'min-h-12 text-center py-2 rounded-lg font-semibold bg-yellow-100 transition duration-300';
+                return;
+            }
+
+            const isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+            answerInput.disabled = true;
+            currentQA.userAnswer = userAnswer;
+            currentQA.isCorrect = isCorrect;
+
+            if (isCorrect) {
+                score++;
+                feedbackArea.innerHTML = `✔️ 答對了！`; // FIX: Translated text
+                feedbackArea.className = 'min-h-12 text-center py-2 rounded-lg font-semibold bg-green-500 text-white transition duration-300';
+            } else {
+                feedbackArea.innerHTML = `❌ 答錯了！正確答案是: <span class="font-bold">${correctAnswer}</span>`; // FIX: Translated text
+                feedbackArea.className = 'min-h-12 text-center py-2 rounded-lg font-semibold bg-red-500 text-white transition duration-300';
+            }
+
+            const isLastQuestion = currentQuestionIndex === quizQuestions.length - 1;
+            quizButton.textContent = isLastQuestion ? '查看結果' : '下一題'; // FIX: Translated text
+            quizButton.onclick = isLastQuestion ? window.finishQuiz : window.nextQuestion;
+        }
+
+        window.nextQuestion = function() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizQuestions.length) {
+                window.displayQuestion();
+            } else {
+                window.finishQuiz();
+            }
+        }
+
+        window.startErrorBankQuiz = function() {
+            // 從 currentBankId 獲取基礎 ID (移除可能的 -error 後綴)
+            const baseId = getBaseBankId(currentBankId);
+            const errorBankId = getBankId(baseId, true); // NEW: 這裡不再使用這個簡單的 ID
+            
+            const masterBank = allAvailableBanks.find(b => b.id === baseId);
+            const errorBankName = masterBank ? `${masterBank.name} (錯題庫)` : '錯題庫';
+
+            // 載入錯題庫並立即開始測驗
+            loadQuizBank(errorBankId, errorBankName, true).then(() => {
+                if (qaPairs.length > 0) {
+                    window.startQuiz();
+                } else {
+                     // 載入空錯題庫時，loadQuizBank 內部的邏輯會處理跳轉和提醒
+                }
+            });
+        }
+
+        window.finishQuiz = function() {
+            const finalScore = document.getElementById('final-score');
+            const reviewList = document.getElementById('review-list');
+            
+            quizSection.classList.add('hidden');
+            resultSection.classList.remove('hidden');
+
+            finalScore.textContent = `${score}/${quizQuestions.length}`;
+
+            // 1. 收集本次答錯的題目
+            const incorrectPairs = quizQuestions
+                .filter(qa => !qa.isCorrect)
+                .map(qa => ({ question: qa.question, answer: qa.answer }));
+
+            // 2. 處理錯題庫
+            reviewMistakesButton.classList.add('hidden');
+            
+            // 獲取基礎 ID 
+            const baseId = getBaseBankId(currentBankId);
+            
+            // 修正: 錯題庫現在是獨立的，只有在有錯題時才儲存
+            if (incorrectPairs.length > 0) {
+                // 生成唯一的時間戳 ID
+                const now = new Date();
+                const ts = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+                const errorBankId = `${baseId}-error-${ts}`;
+                
+                const masterBank = allAvailableBanks.find(b => b.id === baseId);
+                const errorBankName = masterBank ? `${masterBank.name} 記錄 ${ts}` : `記錄 ${ts}`;
+
+                // 儲存錯題 (這次不需要合併，因為 ID 是唯一的)
+                saveErrorBank(errorBankId, errorBankName, incorrectPairs).then(() => {
+                    // 只有在儲存成功且有錯題時，才顯示按鈕
+                    reviewMistakesButton.textContent = `複習錯題 (${incorrectPairs.length} 題錯誤)`; // FIX: Translated text
+                    reviewMistakesButton.classList.remove('hidden');
+                    reviewMistakesButton.onclick = () => loadSelectedErrorBank(errorBankId, errorBankName); // 載入本次新生成的 Log
+                }).catch((e) => {
+                    console.error("[CRITICAL ERROR] Failed to save Error Bank:", e);
+                    // 儲存失敗時，顯示一個無法複習的提示
+                    reviewMistakesButton.textContent = `錯誤: 無法儲存錯題紀錄。`; // FIX: Translated text
+                    reviewMistakesButton.classList.add('button-error-review');
+                    reviewMistakesButton.classList.remove('hidden');
+                    reviewMistakesButton.onclick = window.showBankManager;
+                });
+            } else if (isErrorBankActive && incorrectPairs.length === 0) {
+                 // 如果在錯題庫模式下全部答對
+                 reviewMistakesButton.classList.add('hidden');
+            }
+
+
+            // 3. 產生答案回顧列表
+            reviewList.innerHTML = '';
+            quizQuestions.forEach((qa, index) => {
+                const reviewItem = document.createElement('div');
+                const resultIcon = qa.isCorrect ? '✅' : '❌';
+
+                reviewItem.className = `p-3 rounded-lg border ${qa.isCorrect ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'}`;
+                reviewItem.innerHTML = `
+                    <p class="font-bold text-gray-800">${index + 1}. ${qa.question}</p>
+                    <p class="text-sm mt-1 text-gray-600">您的輸入: <span class="font-medium ${qa.isCorrect ? 'text-green-700' : 'text-red-700'}">${qa.userAnswer}</span></p>
+                    <p class="text-sm ${qa.isCorrect ? 'text-green-700' : 'text-red-700'}">結果: ${resultIcon} ${qa.isCorrect ? '正確無誤' : `正確答案: ${qa.answer}`}</p>
+                `; // FIX: Translated text, simplified classes
+                reviewList.appendChild(reviewItem);
+            });
+        }
+        
+        async function saveErrorBank(bankId, bankName, newErrorPairs) {
+            const docRef = getBankDocRef(bankId);
+            
+            try {
+                // Log the actual data being saved for debugging
+                console.log(`[SAVE PAYLOAD] Saving ${newErrorPairs.length} items to Doc ID: ${bankId}`);
+                
+                // 修正: 儲存時不再讀取和合併，直接儲存當前的錯誤列表 (因為 ID 是唯一的)
+                await setDoc(docRef, {
+                    qaPairs: JSON.stringify(newErrorPairs), 
+                    name: bankName,
+                    updatedAt: new Date().toISOString(),
+                    isErrorBank: true // 保持標記
+                }, { merge: false }); // 覆蓋寫入，因為這是新的 Log
+                console.log(`[STORAGE] Error Log '${bankName}' saved successfully.`);
+
+                // 確保錯題庫名稱被儲存到 metadata 中
+                if (!allAvailableBanks.some(b => b.id === bankId)) {
+                    allAvailableBanks.push({ id: bankId, name: bankName });
+                    await saveBankMetadata();
+                    // FIXED: Changed loadBankNames() to window.loadBankNames()
+                    // NEW: 立即重新渲染 Bank Manager 以顯示新的 Log
+                    window.loadBankNames(); 
+                }
+            } catch(e) {
+                console.error("[STORAGE ERROR] Error saving Error Log:", e);
+                throw e; // Rethrow the error so finishQuiz can catch it
+            }
+        }
+        
+        // 啟動 Firebase
+        window.onload = function() {
+            setupFirebase();
+            newBankNameInput.addEventListener('input', () => {
+                createBankButton.disabled = newBankNameInput.value.trim().length < 1;
+            });
+        };
+    </script>
+</body>
+</html>
