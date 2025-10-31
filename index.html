@@ -437,6 +437,12 @@
                 try {
                     return await actionFn();
                 } catch (error) {
+                    // Check for auth errors that are retriable or require user intervention
+                    if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
+                        // These errors should not be retried automatically
+                        throw error;
+                    }
+                    
                     // Only retry on transient/network-related errors
                     if (i === maxRetries - 1 || !(error instanceof FirebaseError && (error.code === 'unavailable' || error.code === 'network-request-failed'))) {
                         throw error;
@@ -494,13 +500,16 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         userId = user.uid;
-                        userIdDisplay.textContent = user.isAnonymous ? userId.substring(0, 8) + '... (Guest)' : (user.email ? user.email.substring(0, user.email.indexOf('@')) + ' (Google)' : userId.substring(0, 8) + ' (Google)');
+                        // 修正顯示名稱
+                        const displayName = user.isAnonymous ? userId.substring(0, 8) + '... (訪客)' : (user.email ? user.email.substring(0, user.email.indexOf('@')) + ' (Google)' : userId.substring(0, 8) + ' (Google)');
+                        userIdDisplay.textContent = displayName;
                         
                         // FIX: 只有在用戶是匿名時，才顯示 Google 登入按鈕（供升級）
+                        // 當用戶成功透過 Google 登入後，user.isAnonymous 會變為 false，按鈕應隱藏。
                         googleSignInSection.classList.toggle('hidden', !user.isAnonymous); 
                     } else {
                         userId = crypto.randomUUID(); 
-                        userIdDisplay.textContent = userId.substring(0, 8) + '... (Local)';
+                        userIdDisplay.textContent = userId.substring(0, 8) + '... (訪客)';
                         googleSignInSection.classList.remove('hidden');
                     }
                     
@@ -533,7 +542,7 @@
             } catch (error) {
                 console.error("Firebase setup failed:", error);
                 userId = crypto.randomUUID();
-                userIdDisplay.textContent = userId.substring(0, 8) + '... (Local)';
+                userIdDisplay.textContent = userId.substring(0, 8) + '... (訪客)';
                 isAuthReady = true; 
                 currentBankId = 'default_bank';
                 loadingScreen.classList.add('hidden');
@@ -554,7 +563,17 @@
                 
             } catch (error) {
                 console.error("Google Sign-In failed:", error);
-                managerFeedback.innerHTML = `[ 錯誤 ] Google 登入失敗: ${error.message}`;
+                
+                let errorMessage = `Google 登入失敗: ${error.message}`;
+                
+                // FIXED: Catch specific popup errors and provide user instructions
+                if (error.code === 'auth/popup-blocked') {
+                    errorMessage = "【彈出視窗已封鎖】 請允許瀏覽器為本網站彈出視窗，然後再試一次。";
+                } else if (error.code === 'auth/cancelled-popup-request') {
+                    errorMessage = "【登入已取消】 請在彈出視窗中完成 Google 登入。";
+                }
+                
+                managerFeedback.innerHTML = `[ 錯誤 ] ${errorMessage}`;
                 managerFeedback.classList.remove('hidden');
             }
         }
