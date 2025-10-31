@@ -311,9 +311,9 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { initializeApp, FirebaseError } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc, collection, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global Firebase vars
@@ -406,6 +406,49 @@
         function isErrorBank(bankId) {
             return bankId.includes('-error-');
         }
+        
+        /**
+         * Robustly fetches a Firestore document with exponential backoff.
+         */
+        async function robustGetDoc(docRef, maxRetries = 5, delay = 1000) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const docSnap = await getDoc(docRef);
+                    return docSnap;
+                } catch (error) {
+                    // Check for transient errors (like 'unavailable' or 'offline')
+                    if (i === maxRetries - 1 || !(error instanceof FirebaseError && (error.code === 'unavailable' || error.code === 'failed-precondition'))) {
+                        // If it's the last retry or not a transient error, throw it
+                        throw error;
+                    }
+                    console.warn(`[STORAGE] GetDoc failed (Retry ${i + 1}/${maxRetries}): ${error.message}. Retrying in ${delay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2; // Exponential backoff
+                }
+            }
+            throw new Error("Maximum retries reached for getDoc.");
+        }
+        
+        /**
+         * Robustly performs an Auth action (like anonymous sign-in) with exponential backoff.
+         */
+        async function robustAuthAction(actionFn, maxRetries = 5, delay = 1000) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    return await actionFn();
+                } catch (error) {
+                    // Only retry on transient/network-related errors
+                    if (i === maxRetries - 1 || !(error instanceof FirebaseError && (error.code === 'unavailable' || error.code === 'network-request-failed'))) {
+                        throw error;
+                    }
+                    console.warn(`[AUTH] Auth action failed (Retry ${i + 1}/${maxRetries}): ${error.message}. Retrying in ${delay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2; 
+                }
+            }
+             throw new Error("Maximum retries reached for Auth action.");
+        }
+
 
         // --- FIREBASE AND DATA PERSISTENCE ---
 
@@ -446,8 +489,8 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
                 setLogLevel('debug');
-
-                // Authenticate Listener
+                
+                // Listen for Auth changes to update UI and trigger initial load
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         userId = user.uid;
@@ -464,16 +507,17 @@
                         isAuthReady = true;
                         currentBankId = 'default_bank';
                         isErrorBankActive = false;
-                        await window.loadBankNames();
+                        await window.loadBankNames(); // Load data only AFTER auth is ready
                         loadingScreen.classList.add('hidden');
                         window.showBankManager();
                     }
                 });
 
-                // Attempt anonymous sign-in only if no user is currently authenticated (to ensure initial persistence)
+                // Attempt anonymous sign-in only if no user is currently authenticated
                 if (!auth.currentUser) {
                     try {
-                        await signInAnonymously(auth);
+                        // FIX: Use robustAuthAction for initial sign-in
+                        await robustAuthAction(() => signInAnonymously(auth));
                     } catch (e) {
                         console.error("Initial Anonymous Sign-In failed:", e);
                         if (e.code === 'auth/configuration-not-found') {
@@ -501,8 +545,9 @@
             managerFeedback.classList.add('hidden');
             try {
                 // The anonymous user is automatically linked to the Google user
-                const result = await signInWithPopup(auth, provider);
-                console.log("Google Sign-In successful:", result.user.uid);
+                const action = () => signInWithPopup(auth, provider);
+                await robustAuthAction(action);
+                console.log("Google Sign-In process initiated/successful.");
                 // The onAuthStateChanged listener handles the UI update and user change
                 
             } catch (error) {
@@ -535,12 +580,14 @@
             if (!isAuthReady || !db || !userId) return;
 
             const metadataRef = getBankMetadataRef();
-            const docSnap = await getDoc(metadataRef);
+            // const docSnap = await getDoc(metadataRef); // OLD
+            const docSnap = await robustGetDoc(metadataRef); // NEW
 
             if (docSnap.exists() && docSnap.data().banks) {
                 allAvailableBanks = docSnap.data().banks;
             } else {
-                const defaultBankDoc = await getDoc(getBankDocRef('default_bank'));
+                // const defaultBankDoc = await getDoc(getBankDocRef('default_bank')); // OLD
+                const defaultBankDoc = await robustGetDoc(getBankDocRef('default_bank')); // NEW
                 if (defaultBankDoc.exists()) {
                     allAvailableBanks = [{ id: 'default_bank', name: '預設題庫', isError: false }];
                 } else {
@@ -624,7 +671,9 @@
             const docRef = getBankDocRef(bankId);
             
             try {
-                const docSnap = await getDoc(docRef); 
+                // const docSnap = await getDoc(docRef); // OLD
+                const docSnap = await robustGetDoc(docRef); // NEW
+                
                 if (docSnap.exists() && docSnap.data().qaPairs) {
                     const loadedPairs = JSON.parse(docSnap.data().qaPairs);
                     qaPairs = loadedPairs;
