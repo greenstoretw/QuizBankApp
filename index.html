@@ -1,144 +1,223 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-   <link rel="icon" type="image/x-icon" href="/QuizBankApp/inmage.ico">
+    <!-- FIX: Favicon - 使用同目錄下的 inmage.ico 檔案作為網站圖示 -->
+    <link rel="icon" type="image/x-icon" href="inmage.png">
+    
+    <!-- 刪除或註釋掉舊的 SVG Data URI Favicon，避免圖示衝突 -->
+    <!-- <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='0' y='14'>🧠</text></svg>"> -->
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>填空題問答測驗 - 極簡學習版</title>
     
-    <!-- FIX: Favicon (使用學習相關的 Emoji) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='0' y='14'>🧠</text></svg>">
-
     <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* 字體：統一使用 Inter */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap');
+        
+        /* --- CYBERPUNK THEME START --- */
+
+        /* Define Cyberpunk Color Palette */
+        :root {
+            --cp-bg-dark: #101827;
+            --cp-bg-card: #1f2937;
+            --cp-neon-blue: #00FFFF;
+            --cp-neon-magenta: #FF00FF;
+            --cp-neon-green: #00FF7F;
+            --cp-text-light: #E5E7EB;
+            --cp-text-subtle: #9CA3AF;
+        }
+
+        @keyframes neonGlow {
+            0% { box-shadow: 0 0 5px var(--cp-neon-blue), 0 0 10px var(--cp-neon-blue); }
+            100% { box-shadow: 0 0 10px var(--cp-neon-blue), 0 0 15px var(--cp-neon-blue); }
+        }
+
+        @keyframes electricPulse {
+            0% { border-color: var(--cp-neon-blue); }
+            50% { border-color: var(--cp-neon-magenta); }
+            100% { border-color: var(--cp-neon-blue); }
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f9fc; /* 輕盈的背景色 */
-            color: #333333; 
+            font-family: 'Inter', sans-serif, monospace; /* Add monospace fallback for tech feel */
+            background-color: var(--cp-bg-dark); /* Dark Background */
+            color: var(--cp-text-light); /* Light Text */
             transition: background-color 0.5s;
+            
+            /* 應用動態漸層背景（模擬雨夜霓虹效果，原有的漸層已替換） */
+            background: linear-gradient(-45deg, #101827, #0c121d, #101827, #1f2937);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite; /* 保持動畫效果，但使用深色漸層 */
+        }
+
+        /* Core Title Styling */
+        #main-title {
+            color: var(--cp-neon-blue);
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.8), 0 0 10px rgba(0, 255, 255, 0.5);
+            animation: neonGlow 1.5s ease-in-out infinite alternate;
         }
         
         /* 核心卡片容器：無陰影，乾淨邊框 */
         .container-card {
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0; 
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* 輕微的、扁平的陰影 */
+            background-color: var(--cp-bg-card); /* Darker Card Background */
+            border: 2px solid var(--cp-neon-blue); 
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), 0 0 25px rgba(0, 255, 255, 0.1); /* Neon Glow */
+            border-radius: 8px; /* Keep slight rounding */
         }
         
         /* 輸入項目卡片：乾淨分割 */
         .input-card {
-            background-color: #ffffff;
-            border: 1px solid #dddddd;
-            border-radius: 8px;
+            background-color: var(--cp-bg-dark); /* Darkest input background */
+            border: 1px solid var(--cp-text-subtle);
+            border-radius: 4px; /* Sharper corners */
             transition: all 0.2s ease;
         }
         .input-card:hover {
-            box-shadow: 0 0 0 2px #cce0ff; /* 邊框亮藍色提示 */
-            transform: translateY(-2px);
+            box-shadow: 0 0 5px var(--cp-neon-magenta); /* Magenta hover glow */
+            transform: translateY(0); /* No movement on hover */
         }
         
         /* 輸入框/文字區：清晰邊框 */
         input[type="text"], textarea {
-            background-color: #f9f9f9;
-            border: 1px solid #cccccc;
-            color: #333333; 
-            caret-color: #007bff;
-            transition: border-color 0.2s;
+            background-color: #0c121d; /* Deep dark input field */
+            border: 1px solid var(--cp-neon-blue);
+            color: var(--cp-text-light); 
+            caret-color: var(--cp-neon-green);
         }
         input[type="text"]:focus, textarea:focus {
-            border-color: #007bff; /* 主題藍 */
-            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
-            background-color: #ffffff;
+            border-color: var(--cp-neon-magenta); /* Focus: Magenta border */
+            box-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
+            background-color: #1a2230; /* Slightly lighter on focus */
         }
 
         /* 主題色定義 */
-        .color-primary { color: #007bff; } /* 主題藍 */
-        .color-success { color: #28a745; } /* 綠色成功 */
-        .color-danger { color: #dc3545; }  /* 紅色危險/錯誤 */
+        .color-primary { color: var(--cp-neon-blue); } /* Neon Blue */
+        .color-success { color: var(--cp-neon-green); } /* Neon Green Success */
+        .color-danger { color: var(--cp-neon-magenta); }  /* Neon Magenta Danger/Error */
+        
+        /* 標籤和副文本顏色調整 */
+        .text-gray-500, .text-gray-600, .text-gray-700 {
+            color: var(--cp-text-subtle);
+        }
+        .text-gray-900, .text-gray-800 {
+             color: var(--cp-text-light);
+        }
+
 
         /* 按鈕基礎樣式：扁平化 */
         button {
+            font-family: monospace, 'Inter', sans-serif;
             text-transform: uppercase;
-            font-weight: 600;
-            border-radius: 6px;
-            transition: all 0.2s ease-in-out;
-            border: none;
+            font-weight: 700; /* Bolder text */
+            border-radius: 2px; /* Very sharp corners */
+            border: 1px solid transparent;
+            text-shadow: 0 0 2px;
         }
         
         /* 主要按鈕 (NEW DATA ENTRY) */
         .button-primary { 
-            background-color: #007bff; /* 主題藍 */
-            color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+            background-color: #1a344d; /* Dark Blue Base */
+            color: var(--cp-neon-blue);
+            border-color: var(--cp-neon-blue);
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
         }
         .button-primary:hover {
-            background-color: #0056b3;
-            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+            background-color: #2a4c6e;
+            color: var(--cp-text-light);
+            box-shadow: 0 0 10px var(--cp-neon-blue), 0 0 20px rgba(0, 255, 255, 0.4);
         }
         
         /* 次要按鈕 (LOAD / START SIMULATION / SUBMIT DATA) */
         .button-secondary { 
-            background-color: #6c757d; /* 灰色 */
-            color: #ffffff;
-            box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);
+            background-color: #3e2a4d; /* Dark Magenta Base */
+            color: var(--cp-neon-magenta);
+            border-color: var(--cp-neon-magenta);
+            box-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
         }
         .button-secondary:hover {
-            background-color: #5a6268;
+            background-color: #553366;
+            color: var(--cp-text-light);
+            box-shadow: 0 0 10px var(--cp-neon-magenta), 0 0 20px rgba(255, 0, 255, 0.4);
         }
         
         /* 錯誤按鈕/刪除 (DELETE / REVIEW MISTAKES) */
         .button-error-review {
-            background-color: #dc3545; /* 紅色 */
-            color: #ffffff;
-            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+            background-color: #5d1c23; /* Dark Red Base */
+            color: var(--cp-neon-magenta);
+            border-color: var(--cp-neon-magenta);
+            box-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
         }
         .button-error-review:hover {
-            background-color: #c82333;
+            background-color: #7b2430;
+            box-shadow: 0 0 10px var(--cp-neon-magenta), 0 0 20px rgba(255, 0, 255, 0.4);
         }
 
         /* 禁用狀態 */
         button:disabled {
-            background-color: #e9ecef !important;
-            color: #adb5bd !important;
+            background-color: #1a2230 !important;
+            color: #4a5568 !important;
             box-shadow: none !important;
             cursor: not-allowed;
-            transform: none !important;
+            text-shadow: none;
+        }
+        
+        /* Loading Spinner Color */
+        /* Tailwind spinner color override */
+        #loading-screen .spinner {
+            border-color: #4a5568; /* Use a subtle gray for stability */
+            border-top-color: var(--cp-neon-blue);
         }
 
         /* 測驗問題區塊：使用左側色塊提升可讀性 */
         .quiz-question-box {
-            background-color: #ffffff;
-            border: 1px solid #dddddd;
-            border-left: 4px solid #007bff; /* 主題色指示 */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            background-color: #1a2230; /* Darker than main card */
+            border: 1px solid var(--cp-neon-blue);
+            border-left: 4px solid var(--cp-neon-magenta); /* Neon Magenta indicator */
+            box-shadow: 0 0 3px rgba(0, 255, 255, 0.2);
+        }
+        
+        /* 錯題庫列表的邊框顏色 */
+        .input-card.border-l-4.border-red-300 {
+            border-color: var(--cp-neon-magenta);
+            border-left-color: var(--cp-neon-magenta) !important;
         }
 
         /* 錯誤/提醒訊息卡片 */
         .error-message-card {
-            background-color: #fff0f0;
-            border: 1px solid #dc3545;
-            color: #dc3545;
+            background-color: #3b1720; /* Darker red base */
+            border: 1px solid var(--cp-neon-magenta);
+            color: var(--cp-neon-magenta);
+            text-shadow: 0 0 2px rgba(255, 0, 255, 0.5);
         }
-
+        
         /* 成功/失敗回饋背景 */
+        /* 確保 Tailwind classes 被覆蓋 */
         #feedback-area.bg-green-500 {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background-color: #153d2d !important; /* Dark Green Base */
+            color: var(--cp-neon-green) !important;
+            border: 1px solid var(--cp-neon-green) !important;
+            text-shadow: 0 0 2px rgba(0, 255, 127, 0.5);
         }
         #feedback-area.bg-red-500 {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background-color: #3b1720 !important; /* Dark Red Base */
+            color: var(--cp-neon-magenta) !important;
+            border: 1px solid var(--cp-neon-magenta) !important;
+            text-shadow: 0 0 2px rgba(255, 0, 255, 0.5);
         }
-
-        /* 題庫列表控制項 */
+        
+        /* 列表項目 Hover/Focus State */
         .list-item-control {
-            background-color: #f1f1f1;
+            background-color: var(--cp-bg-dark);
+            border-color: #2d3748;
         }
+        .list-item-control:hover {
+            background-color: #1a2230;
+            box-shadow: 0 0 3px var(--cp-neon-blue);
+        }
+        /* --- CYBERPUNK THEME END --- */
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
@@ -201,7 +280,7 @@
 
             <!-- 主題庫列表 -->
             <div class="space-y-4 p-4 input-card">
-                <h3 class="text-lg font-semibold color-primary border-b border-gray-300 pb-1">主題題庫</h3>
+                <h3 class="text-lg font-semibold border-b pb-1 color-primary">主題題庫</h3>
                 <div id="master-bank-list" class="space-y-2 max-h-48 overflow-y-auto">
                     <p class="text-gray-500">掃描中...</p>
                 </div>
@@ -209,7 +288,7 @@
 
             <!-- 錯題庫列表 -->
             <div class="space-y-4 p-4 input-card border-l-4 border-red-300">
-                <h3 class="text-lg font-semibold color-danger border-b border-gray-300 pb-1">錯題紀錄 (歷史記錄)</h3>
+                <h3 class="text-lg font-semibold color-danger border-b pb-1">錯題紀錄 (歷史記錄)</h3>
                 <div id="error-bank-list" class="space-y-2 max-h-48 overflow-y-auto">
                     <p class="text-gray-500">無錯題紀錄。</p>
                 </div>
@@ -322,6 +401,7 @@
         let userId;
         let appId;
         let isAuthReady = false;
+        // 移除 initialLoadExecuted 以恢復重複載入
         
         // Global variable to manage listener subscription
         let unsubscribeFromBank = null; 
@@ -363,7 +443,7 @@
         // Utility functions
         let saveTimeout;
         function debounceSave() {
-            if (!isAuthReady || currentBankId === 'loading' || currentBankId === 'default_bank') return;
+            if (!isAuthReady || !userId || currentBankId === 'loading' || currentBankId === 'default_bank') return;
             if (saveTimeout) clearTimeout(saveTimeout);
             saveTimeout = setTimeout(saveQuizBank, 1500); // Save after 1.5 seconds of inactivity
         }
@@ -479,8 +559,8 @@
                 // 優先使用 GITHUB_FIREBASE_CONFIG
                 const firebaseConfig = GITHUB_FIREBASE_CONFIG;
                 appId = firebaseConfig.appId || 'default-github-app-id'; 
-                const initialAuthToken = null; // 在 GitHub 上無法使用初始 auth token
-
+                
+                // 檢查配置是否有效
                 if (!firebaseConfig || !firebaseConfig.apiKey) {
                     console.error("Firebase config is missing or invalid. Data persistence disabled.");
                     isAuthReady = true;
@@ -505,23 +585,40 @@
                         userIdDisplay.textContent = displayName;
                         
                         // FIX: 只有在用戶是匿名時，才顯示 Google 登入按鈕（供升級）
-                        // 當用戶成功透過 Google 登入後，user.isAnonymous 會變為 false，按鈕應隱藏。
                         googleSignInSection.classList.toggle('hidden', !user.isAnonymous); 
                     } else {
-                        userId = crypto.randomUUID(); 
-                        userIdDisplay.textContent = userId.substring(0, 8) + '... (訪客)';
+                        // **FIX: 如果未認證，設置 userId 為 null，以阻止 Firestore 存取**
+                        userId = null; 
+                        userIdDisplay.textContent = 'Auth Failed / Not Logged In'; // 清晰的狀態顯示
                         googleSignInSection.classList.remove('hidden');
                     }
                     
-                    // Only run initial load once authentication state is established
-                    if (!isAuthReady) {
-                        isAuthReady = true;
-                        currentBankId = 'default_bank';
-                        isErrorBankActive = false;
-                        await window.loadBankNames(); // Load data only AFTER auth is ready
-                        loadingScreen.classList.add('hidden');
-                        window.showBankManager();
+                    // 每次認證狀態改變時，重新設定 isAuthReady 並載入資料
+                    isAuthReady = true;
+                    currentBankId = 'default_bank';
+                    isErrorBankActive = false;
+                    
+                    // **FIX: 關鍵權限檢查與錯誤引導**
+                    if (user) { 
+                       // 使用者已認證 (匿名或 Google)
+                       await window.loadBankNames(); // 只有在認證成功後才載入資料
+                    } else {
+                       // 認證失敗或使用者登出 (觸發權限錯誤的根源)
+                       console.error("CRITICAL FIREBASE ERROR: Authentication failed to secure a user session. Check Firebase Console Authentication and Security Rules.");
+                       managerFeedback.innerHTML = `
+                         [ 嚴重錯誤: 權限不足 ] 認證失敗，無法安全儲存數據。
+                         <br>請檢查您的 **Firebase Authentication** 是否啟用 **匿名登入**。
+                         <br>如果已啟用，請檢查 **Firestore 安全規則**，確保登入用戶 (Authenticated User) 允許存取 <code>/artifacts/{appId}/users/{userId}</code> 路徑。
+                       `;
+                       managerFeedback.classList.remove('hidden');
+                       // 初始化本地非持久化狀態
+                       qaPairs = [];
+                       window.addQAPair(true); 
                     }
+
+                    loadingScreen.classList.add('hidden');
+                    window.showBankManager();
+                    // **FIX: 結束恢復的邏輯**
                 });
 
                 // Attempt anonymous sign-in only if no user is currently authenticated
@@ -530,19 +627,17 @@
                         // FIX: Use robustAuthAction for initial sign-in
                         await robustAuthAction(() => signInAnonymously(auth));
                     } catch (e) {
-                        console.error("Initial Anonymous Sign-In failed:", e);
-                        if (e.code === 'auth/configuration-not-found') {
-                            managerFeedback.innerHTML = `[ 錯誤: 認證失敗 ] 請檢查您的 Firebase 設定。您需要到 Firebase Console 的 **Authentication** 頁面啟用 **Anonymous 匿名登入**。`;
-                            managerFeedback.classList.remove('hidden');
-                        }
+                        console.error("Initial Anonymous Sign-In failed, relying on listener to report the final status.", e);
+                        // If anonymous sign-in fails here, the onAuthStateChanged listener will handle the error display
                     }
                 }
                 
 
             } catch (error) {
+                // Firebase Setup 發生致命錯誤
                 console.error("Firebase setup failed:", error);
-                userId = crypto.randomUUID();
-                userIdDisplay.textContent = userId.substring(0, 8) + '... (訪客)';
+                userId = null; // 確保在致命錯誤時也是 null
+                userIdDisplay.textContent = 'Setup Failed!'; 
                 isAuthReady = true; 
                 currentBankId = 'default_bank';
                 loadingScreen.classList.add('hidden');
@@ -580,7 +675,8 @@
 
 
         function getBankCollectionRef() {
-            if (!db || !userId || !appId) return null;
+            // FIX: 如果 userId 為 null，則返回 null，這會被 loadQuizBank 和 saveQuizBank 捕獲。
+            if (!db || !userId || !appId) return null; 
             // FIX: Ensure the path is correct. Using 'artifacts/{appId}/users/{userId}/quiz_banks'
             return collection(db, 'artifacts', appId, 'users', userId, 'quiz_banks');
         }
@@ -599,7 +695,7 @@
         // --- Bank Metadata Management ---
 
         window.loadBankNames = async function() { // FIXED: Attached loadBankNames to window
-            if (!isAuthReady || !db || !userId) return;
+            if (!isAuthReady || !db || !userId) return; // **關鍵檢查：如果 userId 為 null 則退出**
 
             const metadataRef = getBankMetadataRef();
             // const docSnap = await getDoc(metadataRef); // OLD
@@ -608,10 +704,11 @@
             if (docSnap.exists() && docSnap.data().banks) {
                 allAvailableBanks = docSnap.data().banks;
             } else {
-                // const defaultBankDoc = await getDoc(getBankDocRef('default_bank')); // OLD
-                const defaultBankDoc = await robustGetDoc(getBankDocRef('default_bank')); // NEW
+                // 偵錯修正: 如果 metadata 不存在，檢查 default_bank 是否存在，如果存在則建立 metadata
+                const defaultBankDoc = await robustGetDoc(getBankDocRef('default_bank')); 
                 if (defaultBankDoc.exists()) {
                     allAvailableBanks = [{ id: 'default_bank', name: '預設題庫', isError: false }];
+                    await saveBankMetadata(); // 如果 default_bank 存在但 metadata 不存在，則儲存 metadata
                 } else {
                     allAvailableBanks = [];
                 }
@@ -656,6 +753,7 @@
             }
 
             try {
+                // 偵錯修正: 確保只儲存有效題目
                 const pairsToSave = qaPairs.filter(p => p.question.trim() && p.answer.trim());
                 
                 await setDoc(docRef, {
@@ -726,8 +824,11 @@
             window.checkStartButton();
             window.hideBankManager();
             
+            // 偵錯修正: 確保 onSnapshot 監聽器僅用於同步，不應該導致 UI 閃爍或狀態被覆蓋
             unsubscribeFromBank = onSnapshot(docRef, (snap) => {
                  console.log(`[STORAGE] Snapshot received for ${bankName}, skipping full UI refresh to preserve input.`);
+                 // 可選: 如果需要實時同步 (但不建議用於編輯中的題庫，避免輸入覆蓋)
+                 // if (snap.exists() && snap.data().qaPairs) { qaPairs = JSON.parse(snap.data().qaPairs); }
             }, (error) => {
                 console.error("[STORAGE] Error setting up snapshot listener:", error);
             });
@@ -767,7 +868,8 @@
                     controls.appendChild(loadBtn);
 
                     // DELETE Button
-                    if (bank.id !== currentBankId) { // Prevent deleting the currently active bank
+                    // 偵錯修正: 預設題庫 (default_bank) 不應該顯示刪除按鈕
+                    if (bank.id !== currentBankId && bank.id !== 'default_bank') { 
                         const deleteBtn = document.createElement('button');
                         deleteBtn.className = 'text-sm bg-red-100 text-red-700 py-1 px-3 rounded-md hover:bg-red-200'; // FIX: Flat delete button
                         deleteBtn.textContent = '刪除'; // FIX: Translated text
@@ -839,13 +941,10 @@
             
             if (hasActiveBank) {
                 continueBankButton.disabled = false;
-                const baseName = currentBankName.replace(' (錯題庫)', '').replace(' (錯題)', '').replace('記錄', '紀錄'); // FIX: Clean up display name
-                const name = isErrorBankActive ? `${baseName}` : baseName;
-
-                // 修正 currentBankId 在 error bank log 情況下顯示問題 (僅顯示名稱)
-                const currentBankDisplayName = currentBankName.includes('記錄') ? currentBankName : name;
+                // 偵錯修正: 確保顯示名稱不會因為錯誤 Bank 的名稱長度而截斷
+                const name = isErrorBankActive ? currentBankName : currentBankName; 
                 
-                continueBankButton.textContent = `繼續編輯/測驗: ${currentBankDisplayName}`;
+                continueBankButton.textContent = `繼續編輯/測驗: ${name}`;
             } else {
                 continueBankButton.disabled = true;
                 continueBankButton.textContent = '請先建立或載入題庫';
@@ -1011,8 +1110,8 @@
             bankManagerSection.classList.remove('hidden');
             window.loadBankNames(); 
             
-            const baseName = currentBankName.replace(' (錯題庫)', '').replace(' (錯題)', '').replace('記錄', '紀錄'); // FIX: Clean up display name
-            const name = isErrorBankActive ? `${baseName}` : baseName;
+            // 偵錯修正: 確保顯示名稱不會因為錯誤 Bank 的名稱長度而截斷
+            const name = isErrorBankActive ? currentBankName : currentBankName;
 
             currentBankDisplay.innerHTML = `當前題庫: <span class="font-bold text-gray-900">${name}</span>`; // FIX: Simplified classes
             
@@ -1272,9 +1371,11 @@
             if (isCorrect) {
                 score++;
                 feedbackArea.innerHTML = `✔️ 答對了！`; // FIX: Translated text
+                // FIX: 使用 CSS 變數定義的成功背景
                 feedbackArea.className = 'min-h-12 text-center py-2 rounded-lg font-semibold bg-green-500 text-white transition duration-300';
             } else {
                 feedbackArea.innerHTML = `❌ 答錯了！正確答案是: <span class="font-bold">${correctAnswer}</span>`; // FIX: Translated text
+                // FIX: 使用 CSS 變數定義的失敗背景
                 feedbackArea.className = 'min-h-12 text-center py-2 rounded-lg font-semibold bg-red-500 text-white transition duration-300';
             }
 
@@ -1366,11 +1467,16 @@
                 const reviewItem = document.createElement('div');
                 const resultIcon = qa.isCorrect ? '✅' : '❌';
 
+                // FIX: 使用 CSS 變數定義的成功/失敗回顧背景
                 reviewItem.className = `p-3 rounded-lg border ${qa.isCorrect ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'}`;
+                
+                // FIX: 移除 Tailwind 顏色類別，讓 CSS 樣式接管
+                const userAnswerClass = qa.isCorrect ? 'color-success' : 'color-danger';
+                
                 reviewItem.innerHTML = `
                     <p class="font-bold text-gray-800">${index + 1}. ${qa.question}</p>
-                    <p class="text-sm mt-1 text-gray-600">您的輸入: <span class="font-medium ${qa.isCorrect ? 'text-green-700' : 'text-red-700'}">${qa.userAnswer}</span></p>
-                    <p class="text-sm ${qa.isCorrect ? 'text-green-700' : 'text-red-700'}">結果: ${resultIcon} ${qa.isCorrect ? '正確無誤' : `正確答案: ${qa.answer}`}</p>
+                    <p class="text-sm mt-1 text-gray-600">您的輸入: <span class="font-medium ${userAnswerClass}">${qa.userAnswer}</span></p>
+                    <p class="text-sm ${userAnswerClass}">結果: ${resultIcon} ${qa.isCorrect ? '正確無誤' : `正確答案: ${qa.answer}`}</p>
                 `; // FIX: Translated text, simplified classes
                 reviewList.appendChild(reviewItem);
             });
