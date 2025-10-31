@@ -495,7 +495,9 @@
                     if (user) {
                         userId = user.uid;
                         userIdDisplay.textContent = user.isAnonymous ? userId.substring(0, 8) + '... (Guest)' : (user.email ? user.email.substring(0, user.email.indexOf('@')) + ' (Google)' : userId.substring(0, 8) + ' (Google)');
-                        googleSignInSection.classList.add('hidden');
+                        
+                        // FIX: 只有在用戶是匿名時，才顯示 Google 登入按鈕（供升級）
+                        googleSignInSection.classList.toggle('hidden', !user.isAnonymous); 
                     } else {
                         userId = crypto.randomUUID(); 
                         userIdDisplay.textContent = userId.substring(0, 8) + '... (Local)';
@@ -560,6 +562,7 @@
 
         function getBankCollectionRef() {
             if (!db || !userId || !appId) return null;
+            // FIX: Ensure the path is correct. Using 'artifacts/{appId}/users/{userId}/quiz_banks'
             return collection(db, 'artifacts', appId, 'users', userId, 'quiz_banks');
         }
 
