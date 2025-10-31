@@ -359,7 +359,7 @@
     <script type="module">
         import { initializeApp, FirebaseError } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc, collection, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc, collection, deleteDoc, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global Firebase vars
@@ -654,12 +654,39 @@
             if (docSnap.exists() && docSnap.data().banks) {
                 allAvailableBanks = docSnap.data().banks;
             } else {
-                // const defaultBankDoc = await getDoc(getBankDocRef('default_bank')); // OLD
-                const defaultBankDoc = await robustGetDoc(getBankDocRef('default_bank')); // NEW
-                if (defaultBankDoc.exists()) {
-                    allAvailableBanks = [{ id: 'default_bank', name: '預設題庫', isError: false }];
-                } else {
-                    allAvailableBanks = [];
+                // NEW USER SCENARIO: The metadata document doesn't exist.
+                // We will create it along with a default quiz bank.
+                console.log("[STORAGE] New user detected. Initializing default data...");
+                try {
+                    const batch = writeBatch(db);
+
+                    // 1. Define the default bank data
+                    const defaultBank = { id: 'default_bank', name: '預設題庫', isError: false };
+
+                    // 2. Set the metadata document
+                    const metadataRef = getBankMetadataRef();
+                    batch.set(metadataRef, { banks: [defaultBank], updatedAt: new Date().toISOString() });
+
+                    // 3. Set the default bank document
+                    const defaultBankRef = getBankDocRef('default_bank');
+                    batch.set(defaultBankRef, {
+                        name: '預設題庫',
+                        qaPairs: '[]', // Start with an empty bank
+                        updatedAt: new Date().toISOString(),
+                        isErrorBank: false
+                    });
+
+                    // 4. Commit the batch
+                    await batch.commit();
+                    console.log("[STORAGE] Default data initialized successfully.");
+
+                    // 5. Set the local state
+                    allAvailableBanks = [defaultBank];
+                } catch (error) {
+                    console.error("[CRITICAL] Failed to initialize new user data:", error);
+                    managerFeedback.innerHTML = `[ 嚴重錯誤 ] 無法為新用戶初始化數據庫。請刷新頁面再試一次。`;
+                    managerFeedback.classList.remove('hidden');
+                    allAvailableBanks = []; // Reset to empty on failure
                 }
             }
             renderBankList();
