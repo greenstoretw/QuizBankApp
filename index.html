@@ -2,227 +2,20 @@
 <html lang="zh-Hant">
 <head>
     <!-- FIX: Favicon - 使用同目錄下的 inmage.ico 檔案作為網站圖示 -->
-    <link rel="icon" type="image/x-icon" href="inmage.png">
+    <link rel="icon" type="image/x-icon" href="inmage.ico">
     
-    <!-- 刪除或註釋掉舊的 SVG Data URI Favicon，避免圖示衝突 -->
-    <!-- <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='0' y='14'>🧠</text></svg>"> -->
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>填空題問答測驗 - 極簡學習版</title>
     
-    <!-- 載入 Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* 字體：統一使用 Inter */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap');
-        
-        /* --- CYBERPUNK THEME START --- */
+    <!-- 載入編譯後的 CSS 檔案 -->
+    <link href="output.css" rel="stylesheet">
 
-        /* Define Cyberpunk Color Palette */
-        :root {
-            --cp-bg-dark: #101827;
-            --cp-bg-card: #1f2937;
-            --cp-neon-blue: #00FFFF;
-            --cp-neon-magenta: #FF00FF;
-            --cp-neon-green: #00FF7F;
-            --cp-text-light: #E5E7EB;
-            --cp-text-subtle: #9CA3AF;
-        }
-
-        @keyframes neonGlow {
-            0% { box-shadow: 0 0 5px var(--cp-neon-blue), 0 0 10px var(--cp-neon-blue); }
-            100% { box-shadow: 0 0 10px var(--cp-neon-blue), 0 0 15px var(--cp-neon-blue); }
-        }
-
-        @keyframes electricPulse {
-            0% { border-color: var(--cp-neon-blue); }
-            50% { border-color: var(--cp-neon-magenta); }
-            100% { border-color: var(--cp-neon-blue); }
-        }
-
-        body {
-            font-family: 'Inter', sans-serif, monospace; /* Add monospace fallback for tech feel */
-            background-color: var(--cp-bg-dark); /* Dark Background */
-            color: var(--cp-text-light); /* Light Text */
-            transition: background-color 0.5s;
-            
-            /* 應用動態漸層背景（模擬雨夜霓虹效果，原有的漸層已替換） */
-            background: linear-gradient(-45deg, #101827, #0c121d, #101827, #1f2937);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite; /* 保持動畫效果，但使用深色漸層 */
-        }
-
-        /* Core Title Styling */
-        #main-title {
-            color: var(--cp-neon-blue);
-            text-shadow: 0 0 5px rgba(0, 255, 255, 0.8), 0 0 10px rgba(0, 255, 255, 0.5);
-            animation: neonGlow 1.5s ease-in-out infinite alternate;
-        }
-        
-        /* 核心卡片容器：無陰影，乾淨邊框 */
-        .container-card {
-            background-color: var(--cp-bg-card); /* Darker Card Background */
-            border: 2px solid var(--cp-neon-blue); 
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), 0 0 25px rgba(0, 255, 255, 0.1); /* Neon Glow */
-            border-radius: 8px; /* Keep slight rounding */
-        }
-        
-        /* 輸入項目卡片：乾淨分割 */
-        .input-card {
-            background-color: var(--cp-bg-dark); /* Darkest input background */
-            border: 1px solid var(--cp-text-subtle);
-            border-radius: 4px; /* Sharper corners */
-            transition: all 0.2s ease;
-        }
-        .input-card:hover {
-            box-shadow: 0 0 5px var(--cp-neon-magenta); /* Magenta hover glow */
-            transform: translateY(0); /* No movement on hover */
-        }
-        
-        /* 輸入框/文字區：清晰邊框 */
-        input[type="text"], textarea {
-            background-color: #0c121d; /* Deep dark input field */
-            border: 1px solid var(--cp-neon-blue);
-            color: var(--cp-text-light); 
-            caret-color: var(--cp-neon-green);
-        }
-        input[type="text"]:focus, textarea:focus {
-            border-color: var(--cp-neon-magenta); /* Focus: Magenta border */
-            box-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
-            background-color: #1a2230; /* Slightly lighter on focus */
-        }
-
-        /* 主題色定義 */
-        .color-primary { color: var(--cp-neon-blue); } /* Neon Blue */
-        .color-success { color: var(--cp-neon-green); } /* Neon Green Success */
-        .color-danger { color: var(--cp-neon-magenta); }  /* Neon Magenta Danger/Error */
-        
-        /* 標籤和副文本顏色調整 */
-        .text-gray-500, .text-gray-600, .text-gray-700 {
-            color: var(--cp-text-subtle);
-        }
-        .text-gray-900, .text-gray-800 {
-             color: var(--cp-text-light);
-        }
-
-
-        /* 按鈕基礎樣式：扁平化 */
-        button {
-            font-family: monospace, 'Inter', sans-serif;
-            text-transform: uppercase;
-            font-weight: 700; /* Bolder text */
-            border-radius: 2px; /* Very sharp corners */
-            border: 1px solid transparent;
-            text-shadow: 0 0 2px;
-        }
-        
-        /* 主要按鈕 (NEW DATA ENTRY) */
-        .button-primary { 
-            background-color: #1a344d; /* Dark Blue Base */
-            color: var(--cp-neon-blue);
-            border-color: var(--cp-neon-blue);
-            box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-        }
-        .button-primary:hover {
-            background-color: #2a4c6e;
-            color: var(--cp-text-light);
-            box-shadow: 0 0 10px var(--cp-neon-blue), 0 0 20px rgba(0, 255, 255, 0.4);
-        }
-        
-        /* 次要按鈕 (LOAD / START SIMULATION / SUBMIT DATA) */
-        .button-secondary { 
-            background-color: #3e2a4d; /* Dark Magenta Base */
-            color: var(--cp-neon-magenta);
-            border-color: var(--cp-neon-magenta);
-            box-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
-        }
-        .button-secondary:hover {
-            background-color: #553366;
-            color: var(--cp-text-light);
-            box-shadow: 0 0 10px var(--cp-neon-magenta), 0 0 20px rgba(255, 0, 255, 0.4);
-        }
-        
-        /* 錯誤按鈕/刪除 (DELETE / REVIEW MISTAKES) */
-        .button-error-review {
-            background-color: #5d1c23; /* Dark Red Base */
-            color: var(--cp-neon-magenta);
-            border-color: var(--cp-neon-magenta);
-            box-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
-        }
-        .button-error-review:hover {
-            background-color: #7b2430;
-            box-shadow: 0 0 10px var(--cp-neon-magenta), 0 0 20px rgba(255, 0, 255, 0.4);
-        }
-
-        /* 禁用狀態 */
-        button:disabled {
-            background-color: #1a2230 !important;
-            color: #4a5568 !important;
-            box-shadow: none !important;
-            cursor: not-allowed;
-            text-shadow: none;
-        }
-        
-        /* Loading Spinner Color */
-        /* Tailwind spinner color override */
-        #loading-screen .spinner {
-            border-color: #4a5568; /* Use a subtle gray for stability */
-            border-top-color: var(--cp-neon-blue);
-        }
-
-        /* 測驗問題區塊：使用左側色塊提升可讀性 */
-        .quiz-question-box {
-            background-color: #1a2230; /* Darker than main card */
-            border: 1px solid var(--cp-neon-blue);
-            border-left: 4px solid var(--cp-neon-magenta); /* Neon Magenta indicator */
-            box-shadow: 0 0 3px rgba(0, 255, 255, 0.2);
-        }
-        
-        /* 錯題庫列表的邊框顏色 */
-        .input-card.border-l-4.border-red-300 {
-            border-color: var(--cp-neon-magenta);
-            border-left-color: var(--cp-neon-magenta) !important;
-        }
-
-        /* 錯誤/提醒訊息卡片 */
-        .error-message-card {
-            background-color: #3b1720; /* Darker red base */
-            border: 1px solid var(--cp-neon-magenta);
-            color: var(--cp-neon-magenta);
-            text-shadow: 0 0 2px rgba(255, 0, 255, 0.5);
-        }
-        
-        /* 成功/失敗回饋背景 */
-        /* 確保 Tailwind classes 被覆蓋 */
-        #feedback-area.bg-green-500 {
-            background-color: #153d2d !important; /* Dark Green Base */
-            color: var(--cp-neon-green) !important;
-            border: 1px solid var(--cp-neon-green) !important;
-            text-shadow: 0 0 2px rgba(0, 255, 127, 0.5);
-        }
-        #feedback-area.bg-red-500 {
-            background-color: #3b1720 !important; /* Dark Red Base */
-            color: var(--cp-neon-magenta) !important;
-            border: 1px solid var(--cp-neon-magenta) !important;
-            text-shadow: 0 0 2px rgba(255, 0, 255, 0.5);
-        }
-        
-        /* 列表項目 Hover/Focus State */
-        .list-item-control {
-            background-color: var(--cp-bg-dark);
-            border-color: #2d3748;
-        }
-        .list-item-control:hover {
-            background-color: #1a2230;
-            box-shadow: 0 0 3px var(--cp-neon-blue);
-        }
-        /* --- CYBERPUNK THEME END --- */
-    </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
 
-    <div id="app-container" class="w-full max-w-2xl p-6 md:p-10 rounded-xl container-card">
+    <!-- 佈局調整: 根據螢幕大小調整最大寬度，確保響應式設計 -->
+    <div id="app-container" class="w-full sm:max-w-xl md:max-w-3xl lg:max-w-4xl p-6 md:p-10 rounded-xl container-card">
         <h1 id="main-title" class="text-3xl font-bold text-center mb-8 color-primary">
             測驗學習系統
         </h1>
@@ -238,9 +31,22 @@
 
         <!-- 0. 題庫管理器 (Bank Manager) -->
         <div id="bank-manager-section" class="hidden space-y-6">
-            <h2 class="text-xl font-semibold border-b pb-2 color-primary">
-                題庫管理中心
-            </h2>
+            
+            <!-- 新增刷新按鈕和標題的彈性佈局 -->
+            <div class="flex justify-between items-center border-b pb-2">
+                <h2 class="text-xl font-semibold color-primary">
+                    題庫管理中心
+                </h2>
+                <!-- 刷新按鈕 -->
+                <button onclick="window.loadBankNames()" 
+                    class="py-2 px-4 button-primary text-sm flex items-center space-x-1"
+                    title="重新整理題庫列表">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.9 5.099V7a1 1 0 01-2 0V3a1 1 0 011-1zm12.9 6.283a1 1 0 011.092.715 8.002 8.002 0 01-14.733 4.298 1 1 0 11.956-1.745A6.002 6.002 0 0015.1 8.892V11a1 1 0 012 0v4a1 1 0 01-1 1h-5a1 1 0 010-2h1.86a8.002 8.002 0 01-13.627-4.298 1 1 0 01.715-1.092 1 1 0 011.092.715z" clip-rule="evenodd" />
+                    </svg>
+                    <span>刷新</span>
+                </button>
+            </div>
             
             <!-- 錯誤訊息顯示區 -->
             <div id="manager-feedback" class="hidden error-message-card p-3 rounded-lg text-sm text-center font-medium">
@@ -249,11 +55,11 @@
             
             <!-- NEW: Google Sign-In Section -->
             <div id="google-sign-in-section" class="space-y-3 p-4 input-card hidden">
-                <button onclick="signInWithGoogle()"
+                <button onclick="signInWithGoogle()" id="google-sign-in-button"
                     class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 flex items-center justify-center space-x-2">
                     <svg class="w-5 h-5" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M44.5 20H42V19H24V29H38.5C37.3 32.7 34 35.5 30 36.5V40.5C35.5 39.4 40.5 35 43.5 29.5L44.5 28.5V24V20Z" fill="#4285F4"/>
-                        <path d="M24 44C33.9 44 42.4 39 46 32L40.5 29.5C38 33.2 33.3 35.5 28 35.5C21 35.5 15.1 30.7 13 24H9C11.5 33.3 19.8 40 29 40V44H24Z" fill="#34A853"/>
+                        <path d="M24 44C33.9 44 42.4 39 mouthpiece" fill="#34A853"/>
                         <path d="M5 24C5 20 6.5 16.3 9 13L14 15.5C12.5 18.2 11.5 21 11.5 24C11.5 27 12.5 29.8 14 32.5L9 35C6.5 31.7 5 28 5 24Z" fill="#FBBC04"/>
                         <path d="M9 13L14 15.5L16.5 13C19.5 9 24 6.5 29 6.5C33 6.5 36.5 8 39 10.5L43.5 6C40.5 3 35.5 0.5 29 0.5C19.8 0.5 11.5 7.2 9 16L14 18.5V13Z" fill="#EA4335"/>
                         <path d="M44 20H24V29H44V20Z" fill="url(#paint0_linear_101_13)"/>
@@ -401,7 +207,8 @@
         let userId;
         let appId;
         let isAuthReady = false;
-        // 移除 initialLoadExecuted 以恢復重複載入
+        // NEW: Flag to prevent double sign-in attempts
+        let isSigningIn = false;
         
         // Global variable to manage listener subscription
         let unsubscribeFromBank = null; 
@@ -439,6 +246,7 @@
         const reviewMistakesButton = document.getElementById('review-mistakes-button');
         const managerFeedback = document.getElementById('manager-feedback'); // NEW
         const googleSignInSection = document.getElementById('google-sign-in-section'); // NEW
+        const googleSignInButton = document.getElementById('google-sign-in-button'); // NEW
 
         // Utility functions
         let saveTimeout;
@@ -517,9 +325,8 @@
                 try {
                     return await actionFn();
                 } catch (error) {
-                    // Check for auth errors that are retriable or require user intervention
-                    if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
-                        // These errors should not be retried automatically
+                    // **FIX: Re-throw specific errors immediately to prevent assertion failures and retry loops on unrecoverable errors.**
+                    if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
                         throw error;
                     }
                     
@@ -647,15 +454,26 @@
         
         // NEW: Google Sign-In Function
         window.signInWithGoogle = async function() {
-            const provider = new GoogleAuthProvider();
             managerFeedback.classList.add('hidden');
+
+            if (isSigningIn) {
+                console.log("Sign-in already in progress.");
+                return; // Prevent double-clicking
+            }
+            
+            // Set flag and disable button
+            isSigningIn = true;
+            googleSignInButton.disabled = true;
+
+            const provider = new GoogleAuthProvider();
+            
             try {
                 // The anonymous user is automatically linked to the Google user
                 const action = () => signInWithPopup(auth, provider);
                 await robustAuthAction(action);
                 console.log("Google Sign-In process initiated/successful.");
-                // The onAuthStateChanged listener handles the UI update and user change
-                
+                // onAuthStateChanged listener handles the final UI update
+
             } catch (error) {
                 console.error("Google Sign-In failed:", error);
                 
@@ -664,12 +482,20 @@
                 // FIXED: Catch specific popup errors and provide user instructions
                 if (error.code === 'auth/popup-blocked') {
                     errorMessage = "【彈出視窗已封鎖】 請允許瀏覽器為本網站彈出視窗，然後再試一次。";
-                } else if (error.code === 'auth/cancelled-popup-request') {
+                } else if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
                     errorMessage = "【登入已取消】 請在彈出視窗中完成 Google 登入。";
+                } else if (error.code === 'auth/internal-error' && error.message.includes('Pending promise')) {
+                    // Ignore or log the internal assertion error, but provide user-friendly message
+                    errorMessage = "【登入錯誤】 請稍候再試或刷新頁面。 (內部錯誤)";
                 }
                 
                 managerFeedback.innerHTML = `[ 錯誤 ] ${errorMessage}`;
                 managerFeedback.classList.remove('hidden');
+                
+            } finally {
+                // Reset flag and re-enable button after operation completes or fails
+                isSigningIn = false;
+                googleSignInButton.disabled = false;
             }
         }
 
@@ -1370,7 +1196,7 @@
 
             if (isCorrect) {
                 score++;
-                feedbackArea.innerHTML = `✔️ 答對了！`; // FIX: Translated text
+                feedbackArea.innerHTML = ✔️ 答對了！`; // FIX: Translated text
                 // FIX: 使用 CSS 變數定義的成功背景
                 feedbackArea.className = 'min-h-12 text-center py-2 rounded-lg font-semibold bg-green-500 text-white transition duration-300';
             } else {
