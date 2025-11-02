@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <!-- FIX: Favicon - 使用同目錄下的 inmage.ico 檔案作為網站圖示 -->
-    <link rel="icon" type="image/x-icon" href="inmage.ico">
+    <!-- FIX: Favicon - 連結到您上傳的 .png 檔案。如果您有 .ico，請改為 .ico。 -->
+    <link rel="icon" type="image/png" href="inmage.png">
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>填空題問答測驗 - 極簡學習版</title>
     
-    <!-- 載入編譯後的 CSS 檔案 -->
-    <link href="output.css" rel="stylesheet">
+    <!-- 載入編譯後的 CSS 檔案 - 加固 type 屬性 -->
+    <link href="output.css" rel="stylesheet" type="text/css">
 
 </head>
 <body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
@@ -727,7 +727,7 @@
                     const timestampMatch = bank.id.match(/-(\d{8}-\d{6})$/);
                     if (timestampMatch) {
                         const ts = timestampMatch[1];
-                        displayName += `記錄 ${ts.substring(0, 4)}/${ts.substring(4, 6)}/${ts.substring(6, 8)} ${ts.substring(9, 11)}:${ts.substring(11, 13)}`; // FIX: Translated text
+                        displayName += `記錄 ${ts.substring(0, 4)}/${ts.substring(4, 6)}}/${ts.substring(6, 8)} ${ts.substring(9, 11)}:${ts.substring(11, 13)}`; // FIX: Translated text
                     } else {
                         displayName += '未知記錄'; // FIX: Translated text
                     }
@@ -1196,7 +1196,7 @@
 
             if (isCorrect) {
                 score++;
-                feedbackArea.innerHTML = ✔️ 答對了！`; // FIX: Translated text
+                feedbackArea.innerHTML = `✔️ 答對了！`; // FIX: Translated text
                 // FIX: 使用 CSS 變數定義的成功背景
                 feedbackArea.className = 'min-h-12 text-center py-2 rounded-lg font-semibold bg-green-500 text-white transition duration-300';
             } else {
