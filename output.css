@@ -1064,6 +1064,250 @@ video {
   transition-duration: 300ms;
 }
 
+/* --- CYBERPUNK THEME START --- */
+
+/* Define Cyberpunk Color Palette */
+
+:root {
+  --cp-bg-dark: #101827;
+  --cp-bg-card: #1f2937;
+  --cp-neon-blue: #00FFFF;
+  --cp-neon-magenta: #FF00FF;
+  --cp-neon-green: #00FF7F;
+  --cp-text-light: #E5E7EB;
+  --cp-text-subtle: #9CA3AF;
+}
+
+@keyframes neonGlow {
+  0% {
+    box-shadow: 0 0 5px var(--cp-neon-blue), 0 0 10px var(--cp-neon-blue);
+  }
+
+  100% {
+    box-shadow: 0 0 10px var(--cp-neon-blue), 0 0 15px var(--cp-neon-blue);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+body {
+  font-family: 'Inter', sans-serif, monospace;
+  background-color: var(--cp-bg-dark);
+  color: var(--cp-text-light);
+  transition: background-color 0.5s;
+  /* 應用動態漸層背景（模擬雨夜霓虹效果） */
+  background: linear-gradient(-45deg, #101827, #0c121d, #101827, #1f2937);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+/* Core Title Styling */
+
+#main-title {
+  color: var(--cp-neon-blue);
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.8), 0 0 10px rgba(0, 255, 255, 0.5);
+  animation: neonGlow 1.5s ease-in-out infinite alternate;
+}
+
+/* 核心卡片容器：無陰影，乾淨邊框 */
+
+.container-card {
+  background-color: var(--cp-bg-card);
+  border: 2px solid var(--cp-neon-blue);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), 0 0 25px rgba(0, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+/* 輸入項目卡片：乾淨分割 */
+
+.input-card {
+  background-color: var(--cp-bg-dark);
+  border: 1px solid var(--cp-text-subtle);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.input-card:hover {
+  box-shadow: 0 0 5px var(--cp-neon-magenta);
+  transform: translateY(0);
+}
+
+/* 輸入框/文字區：清晰邊框 */
+
+input[type="text"], textarea {
+  background-color: #0c121d;
+  border: 1px solid var(--cp-neon-blue);
+  color: var(--cp-text-light);
+  caret-color: var(--cp-neon-green);
+}
+
+input[type="text"]:focus, textarea:focus {
+  border-color: var(--cp-neon-magenta);
+  box-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
+  background-color: #1a2230;
+}
+
+/* 主題色定義 */
+
+.color-primary {
+  color: var(--cp-neon-blue);
+}
+
+.color-success {
+  color: var(--cp-neon-green);
+}
+
+.color-danger {
+  color: var(--cp-neon-magenta);
+}
+
+/* 標籤和副文本顏色調整 */
+
+.text-gray-500, .text-gray-600, .text-gray-700 {
+  color: var(--cp-text-subtle);
+}
+
+.text-gray-900, .text-gray-800 {
+  color: var(--cp-text-light);
+}
+
+/* 按鈕基礎樣式：扁平化 */
+
+button {
+  font-family: monospace, 'Inter', sans-serif;
+  text-transform: uppercase;
+  font-weight: 700;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  text-shadow: 0 0 2px;
+}
+
+/* 主要按鈕 (NEW DATA ENTRY) */
+
+.button-primary {
+  background-color: #1a344d;
+  color: var(--cp-neon-blue);
+  border-color: var(--cp-neon-blue);
+  box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+}
+
+.button-primary:hover {
+  background-color: #2a4c6e;
+  color: var(--cp-text-light);
+  box-shadow: 0 0 10px var(--cp-neon-blue), 0 0 20px rgba(0, 255, 255, 0.4);
+}
+
+/* 次要按鈕 (LOAD / START SIMULATION / SUBMIT DATA) */
+
+.button-secondary {
+  background-color: #3e2a4d;
+  color: var(--cp-neon-magenta);
+  border-color: var(--cp-neon-magenta);
+  box-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
+}
+
+.button-secondary:hover {
+  background-color: #553366;
+  color: var(--cp-text-light);
+  box-shadow: 0 0 10px var(--cp-neon-magenta), 0 0 20px rgba(255, 0, 255, 0.4);
+}
+
+/* 錯誤按鈕/刪除 (DELETE / REVIEW MISTAKES) */
+
+.button-error-review {
+  background-color: #5d1c23;
+  color: var(--cp-neon-magenta);
+  border-color: var(--cp-neon-magenta);
+  box-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
+}
+
+.button-error-review:hover {
+  background-color: #7b2430;
+  box-shadow: 0 0 10px var(--cp-neon-magenta), 0 0 20px rgba(255, 0, 255, 0.4);
+}
+
+/* 禁用狀態 */
+
+button:disabled {
+  background-color: #1a2230 !important;
+  color: #4a5568 !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+  text-shadow: none;
+}
+
+/* Loading Spinner Color */
+
+#loading-screen .spinner {
+  border-color: #4a5568;
+  border-top-color: var(--cp-neon-blue);
+}
+
+/* 測驗問題區塊：使用左側色塊提升可讀性 */
+
+.quiz-question-box {
+  background-color: #1a2230;
+  border: 1px solid var(--cp-neon-blue);
+  border-left: 4px solid var(--cp-neon-magenta);
+  box-shadow: 0 0 3px rgba(0, 255, 255, 0.2);
+}
+
+/* 錯題庫列表的邊框顏色 */
+
+.input-card.border-l-4.border-red-300 {
+  border-color: var(--cp-neon-magenta);
+  border-left-color: var(--cp-neon-magenta) !important;
+}
+
+/* 錯誤/提醒訊息卡片 */
+
+.error-message-card {
+  background-color: #3b1720;
+  border: 1px solid var(--cp-neon-magenta);
+  color: var(--cp-neon-magenta);
+  text-shadow: 0 0 2px rgba(255, 0, 255, 0.5);
+}
+
+/* 成功/失敗回饋背景 */
+
+#feedback-area.bg-green-500 {
+  background-color: #153d2d !important;
+  color: var(--cp-neon-green) !important;
+  border: 1px solid var(--cp-neon-green) !important;
+  text-shadow: 0 0 2px rgba(0, 255, 127, 0.5);
+}
+
+#feedback-area.bg-red-500 {
+  background-color: #3b1720 !important;
+  color: var(--cp-neon-magenta) !important;
+  border: 1px solid var(--cp-neon-magenta) !important;
+  text-shadow: 0 0 2px rgba(255, 0, 255, 0.5);
+}
+
+/* 列表項目 Hover/Focus State */
+
+.list-item-control {
+  background-color: var(--cp-bg-dark);
+  border-color: #2d3748;
+}
+
+.list-item-control:hover {
+  background-color: #1a2230;
+  box-shadow: 0 0 3px var(--cp-neon-blue);
+}
+
 .hover\:bg-blue-200:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(191 219 254 / var(--tw-bg-opacity, 1));
