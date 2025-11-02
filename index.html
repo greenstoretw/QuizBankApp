@@ -59,7 +59,7 @@
                     class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 flex items-center justify-center space-x-2">
                     <svg class="w-5 h-5" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M44.5 20H42V19H24V29H38.5C37.3 32.7 34 35.5 30 36.5V40.5C35.5 39.4 40.5 35 43.5 29.5L44.5 28.5V24V20Z" fill="#4285F4"/>
-                        <path d="M24 44C33.9 44 42.4 39 mouthpiece" fill="#34A853"/>
+                        <path d="M24 44C33.9 44 42.4 39 46 32L40.5 29.5C38 33.2 33.3 35.5 28 35.5C21 35.5 15.1 30.7 13 24H9C11.5 33.3 19.8 40 29 40V44H24Z" fill="#34A853"/>
                         <path d="M5 24C5 20 6.5 16.3 9 13L14 15.5C12.5 18.2 11.5 21 11.5 24C11.5 27 12.5 29.8 14 32.5L9 35C6.5 31.7 5 28 5 24Z" fill="#FBBC04"/>
                         <path d="M9 13L14 15.5L16.5 13C19.5 9 24 6.5 29 6.5C33 6.5 36.5 8 39 10.5L43.5 6C40.5 3 35.5 0.5 29 0.5C19.8 0.5 11.5 7.2 9 16L14 18.5V13Z" fill="#EA4335"/>
                         <path d="M44 20H24V29H44V20Z" fill="url(#paint0_linear_101_13)"/>
@@ -385,47 +385,44 @@
                 
                 // Listen for Auth changes to update UI and trigger initial load
                 onAuthStateChanged(auth, async (user) => {
+                    // Mark Auth system ready regardless of success
+                    isAuthReady = true; 
+                    currentBankId = 'default_bank';
+                    isErrorBankActive = false;
+                    
                     if (user) {
+                        // --- SUCCESSFUL AUTH ---
                         userId = user.uid;
                         // 修正顯示名稱
                         const displayName = user.isAnonymous ? userId.substring(0, 8) + '... (訪客)' : (user.email ? user.email.substring(0, user.email.indexOf('@')) + ' (Google)' : userId.substring(0, 8) + ' (Google)');
                         userIdDisplay.textContent = displayName;
-                        
-                        // FIX: 只有在用戶是匿名時，才顯示 Google 登入按鈕（供升級）
                         googleSignInSection.classList.toggle('hidden', !user.isAnonymous); 
-                    } else {
-                        // **FIX: 如果未認證，設置 userId 為 null，以阻止 Firestore 存取**
+                        
+                        // Load data
+                        await window.loadBankNames(); 
+                        
+                    } else { 
+                        // --- FAILED AUTH ---
                         userId = null; 
-                        userIdDisplay.textContent = 'Auth Failed / Not Logged In'; // 清晰的狀態顯示
+                        userIdDisplay.textContent = 'Auth Failed / Not Logged In';
                         googleSignInSection.classList.remove('hidden');
-                    }
-                    
-                    // 每次認證狀態改變時，重新設定 isAuthReady 並載入資料
-                    isAuthReady = true;
-                    currentBankId = 'default_bank';
-                    isErrorBankActive = false;
-                    
-                    // **FIX: 關鍵權限檢查與錯誤引導**
-                    if (user) { 
-                       // 使用者已認證 (匿名或 Google)
-                       await window.loadBankNames(); // 只有在認證成功後才載入資料
-                    } else {
-                       // 認證失敗或使用者登出 (觸發權限錯誤的根源)
-                       console.error("CRITICAL FIREBASE ERROR: Authentication failed to secure a user session. Check Firebase Console Authentication and Security Rules.");
-                       managerFeedback.innerHTML = `
-                         [ 嚴重錯誤: 權限不足 ] 認證失敗，無法安全儲存數據。
-                         <br>請檢查您的 **Firebase Authentication** 是否啟用 **匿名登入**。
-                         <br>如果已啟用，請檢查 **Firestore 安全規則**，確保登入用戶 (Authenticated User) 允許存取 <code>/artifacts/{appId}/users/{userId}</code> 路徑。
-                       `;
-                       managerFeedback.classList.remove('hidden');
-                       // 初始化本地非持久化狀態
-                       qaPairs = [];
-                       window.addQAPair(true); 
+
+                        // Display CRITICAL ERROR guidance
+                        console.error("CRITICAL FIREBASE ERROR: Authentication failed to secure a user session. Check Firebase Console Authentication and Security Rules.");
+                        managerFeedback.innerHTML = `
+                          [ 嚴重錯誤: 權限不足 ] 認證失敗，無法安全儲存數據。
+                          <br>請檢查您的 **Firebase Authentication** 是否啟用 **匿名登入**。
+                          <br>如果已啟用，請檢查 **Firestore 安全規則**，確保登入用戶 (Authenticated User) 允許存取 <code>/artifacts/{appId}/users/{userId}</code> 路徑。
+                        `;
+                        managerFeedback.classList.remove('hidden');
+                        
+                        // Initialize local non-persistent state
+                        qaPairs = [];
+                        window.addQAPair(true); 
                     }
 
                     loadingScreen.classList.add('hidden');
                     window.showBankManager();
-                    // **FIX: 結束恢復的邏輯**
                 });
 
                 // Attempt anonymous sign-in only if no user is currently authenticated
@@ -727,7 +724,7 @@
                     const timestampMatch = bank.id.match(/-(\d{8}-\d{6})$/);
                     if (timestampMatch) {
                         const ts = timestampMatch[1];
-                        displayName += `記錄 ${ts.substring(0, 4)}/${ts.substring(4, 6)}}/${ts.substring(6, 8)} ${ts.substring(9, 11)}:${ts.substring(11, 13)}`; // FIX: Translated text
+                        displayName += `記錄 ${ts.substring(0, 4)}/${ts.substring(4, 6)}/${ts.substring(6, 8)} ${ts.substring(9, 11)}:${ts.substring(11, 13)}`; // FIX: Translated text
                     } else {
                         displayName += '未知記錄'; // FIX: Translated text
                     }
